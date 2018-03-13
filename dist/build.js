@@ -10718,158 +10718,679 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var App = function (_React$Component) {
-   _inherits(App, _React$Component);
+var AuctionContractABI = [{
+				"constant": true,
+				"inputs": [],
+				"name": "getThumbnailURL",
+				"outputs": [{
+								"name": "",
+								"type": "string"
+				}],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+}, {
+				"constant": false,
+				"inputs": [],
+				"name": "terminate",
+				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+}, {
+				"constant": false,
+				"inputs": [{
+								"name": "_addr",
+								"type": "address"
+				}, {
+								"name": "_secret",
+								"type": "string"
+				}],
+				"name": "allowBidder",
+				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+}, {
+				"constant": false,
+				"inputs": [],
+				"name": "bid",
+				"outputs": [],
+				"payable": true,
+				"stateMutability": "payable",
+				"type": "function"
+}, {
+				"constant": true,
+				"inputs": [],
+				"name": "getDescription",
+				"outputs": [{
+								"name": "",
+								"type": "string"
+				}],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+}, {
+				"constant": true,
+				"inputs": [],
+				"name": "span",
+				"outputs": [{
+								"name": "",
+								"type": "uint256"
+				}],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+}, {
+				"constant": true,
+				"inputs": [],
+				"name": "MAX_TITLE_LENGTH",
+				"outputs": [{
+								"name": "",
+								"type": "uint8"
+				}],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+}, {
+				"constant": false,
+				"inputs": [],
+				"name": "withdrawBid",
+				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+}, {
+				"constant": true,
+				"inputs": [],
+				"name": "MAX_DESCRIPTION_LENGTH",
+				"outputs": [{
+								"name": "",
+								"type": "uint8"
+				}],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+}, {
+				"constant": true,
+				"inputs": [],
+				"name": "getPrice",
+				"outputs": [{
+								"name": "",
+								"type": "uint256"
+				}],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+}, {
+				"constant": true,
+				"inputs": [],
+				"name": "today",
+				"outputs": [{
+								"name": "",
+								"type": "uint256"
+				}],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+}, {
+				"constant": true,
+				"inputs": [],
+				"name": "timestamp",
+				"outputs": [{
+								"name": "",
+								"type": "uint256"
+				}],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+}, {
+				"constant": true,
+				"inputs": [],
+				"name": "getItemName",
+				"outputs": [{
+								"name": "",
+								"type": "string"
+				}],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+}, {
+				"constant": true,
+				"inputs": [],
+				"name": "item",
+				"outputs": [{
+								"name": "itemName",
+								"type": "string"
+				}, {
+								"name": "description",
+								"type": "string"
+				}, {
+								"name": "thumbnailURL",
+								"type": "string"
+				}, {
+								"name": "startPrice",
+								"type": "uint256"
+				}],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+}, {
+				"inputs": [{
+								"name": "_title",
+								"type": "string"
+				}, {
+								"name": "_description",
+								"type": "string"
+				}, {
+								"name": "_thumbnailURL",
+								"type": "string"
+				}, {
+								"name": "_startPrice",
+								"type": "uint256"
+				}, {
+								"name": "_timespan",
+								"type": "uint256"
+				}],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+}, {
+				"payable": true,
+				"stateMutability": "payable",
+				"type": "fallback"
+}, {
+				"anonymous": false,
+				"inputs": [{
+								"indexed": false,
+								"name": "initiator",
+								"type": "address"
+				}, {
+								"indexed": false,
+								"name": "timestamp",
+								"type": "uint256"
+				}],
+				"name": "Start",
+				"type": "event"
+}, {
+				"anonymous": false,
+				"inputs": [{
+								"indexed": false,
+								"name": "winner",
+								"type": "address"
+				}, {
+								"indexed": false,
+								"name": "timestamp",
+								"type": "uint256"
+				}],
+				"name": "End",
+				"type": "event"
+}, {
+				"anonymous": false,
+				"inputs": [{
+								"indexed": false,
+								"name": "bidder",
+								"type": "address"
+				}, {
+								"indexed": false,
+								"name": "amount",
+								"type": "uint256"
+				}],
+				"name": "Bidding",
+				"type": "event"
+}, {
+				"anonymous": false,
+				"inputs": [{
+								"indexed": false,
+								"name": "timestamp",
+								"type": "uint256"
+				}],
+				"name": "Terminated",
+				"type": "event"
+}];
 
-   function App(props) {
-      _classCallCheck(this, App);
+var AuctionForm = function (_React$Component) {
+				_inherits(AuctionForm, _React$Component);
 
-      var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
+				function AuctionForm() {
+								_classCallCheck(this, AuctionForm);
 
-      _this.state = {
-         lastWinner: 0,
-         timer: 0
-      };
-      return _this;
-   }
+								var _this = _possibleConstructorReturn(this, (AuctionForm.__proto__ || Object.getPrototypeOf(AuctionForm)).call(this));
 
-   _createClass(App, [{
-      key: 'voteNumber',
-      value: function voteNumber(number) {
-         console.log(number);
-      }
-   }, {
-      key: 'render',
-      value: function render() {
-         var _this2 = this;
+								_this.auction = {};
+								return _this;
+				}
 
-         return _react2.default.createElement(
-            'div',
-            { className: 'main-container' },
-            _react2.default.createElement(
-               'h1',
-               null,
-               'Bet for your best number and win huge amounts of Ether'
-            ),
-            _react2.default.createElement(
-               'div',
-               { className: 'block' },
-               _react2.default.createElement(
-                  'h4',
-                  null,
-                  'Timer:'
-               ),
-               ' \xA0',
-               _react2.default.createElement(
-                  'span',
-                  { ref: 'timer' },
-                  ' ',
-                  this.state.timer
-               )
-            ),
-            _react2.default.createElement(
-               'div',
-               { className: 'block' },
-               _react2.default.createElement(
-                  'h4',
-                  null,
-                  'Last winner:'
-               ),
-               ' \xA0',
-               _react2.default.createElement(
-                  'span',
-                  { ref: 'last-winner' },
-                  this.state.lastWinner
-               )
-            ),
-            _react2.default.createElement('hr', null),
-            _react2.default.createElement(
-               'h2',
-               null,
-               'Vote for the next number'
-            ),
-            _react2.default.createElement(
-               'ul',
-               null,
-               _react2.default.createElement(
-                  'li',
-                  { onClick: function onClick() {
-                        _this2.voteNumber(1);
-                     } },
-                  '1'
-               ),
-               _react2.default.createElement(
-                  'li',
-                  { onClick: function onClick() {
-                        _this2.voteNumber(2);
-                     } },
-                  '2'
-               ),
-               _react2.default.createElement(
-                  'li',
-                  { onClick: function onClick() {
-                        _this2.voteNumber(3);
-                     } },
-                  '3'
-               ),
-               _react2.default.createElement(
-                  'li',
-                  { onClick: function onClick() {
-                        _this2.voteNumber(4);
-                     } },
-                  '4'
-               ),
-               _react2.default.createElement(
-                  'li',
-                  { onClick: function onClick() {
-                        _this2.voteNumber(5);
-                     } },
-                  '5'
-               ),
-               _react2.default.createElement(
-                  'li',
-                  { onClick: function onClick() {
-                        _this2.voteNumber(6);
-                     } },
-                  '6'
-               ),
-               _react2.default.createElement(
-                  'li',
-                  { onClick: function onClick() {
-                        _this2.voteNumber(7);
-                     } },
-                  '7'
-               ),
-               _react2.default.createElement(
-                  'li',
-                  { onClick: function onClick() {
-                        _this2.voteNumber(8);
-                     } },
-                  '8'
-               ),
-               _react2.default.createElement(
-                  'li',
-                  { onClick: function onClick() {
-                        _this2.voteNumber(9);
-                     } },
-                  '9'
-               ),
-               _react2.default.createElement(
-                  'li',
-                  { onClick: function onClick() {
-                        _this2.voteNumber(10);
-                     } },
-                  '10'
-               )
-            )
-         );
-      }
-   }]);
+				_createClass(AuctionForm, [{
+								key: 'handleSubmit',
+								value: function handleSubmit(event) {}
+				}, {
+								key: 'handleURLChange',
+								value: function handleURLChange(event) {
+												var url = event.target.value;
+												this.auction.url = url;
+								}
+				}, {
+								key: 'handleDescriptionChange',
+								value: function handleDescriptionChange(event) {
+												var description = event.target.value;
+												this.auction.description = description;
+								}
+				}, {
+								key: 'handleItemNameChange',
+								value: function handleItemNameChange(event) {
+												var itemName = event.target.value;
+												this.auction.itemName = itemName;
+								}
+				}, {
+								key: 'handlePriceChange',
+								value: function handlePriceChange(event) {
+												var price = parseInt(event.target.value);
+												if (price) {
+																this.auction.startPrice = price;
+												}
+								}
+				}, {
+								key: 'render',
+								value: function render() {
+												return _react2.default.createElement(
+																'form',
+																{ onSubmit: this.handleSubmit },
+																_react2.default.createElement(
+																				'div',
+																				{ className: 'form-group' },
+																				_react2.default.createElement(
+																								'label',
+																								{ htmlFor: 'exampleInputEmail1' },
+																								'Item Name'
+																				),
+																				_react2.default.createElement('input', { type: 'text', className: 'form-control', id: 'itemName', onChange: this.handleItemNameChange, 'aria-describedby': 'nameHelp', placeholder: 'Enter item name' }),
+																				_react2.default.createElement(
+																								'small',
+																								{ id: 'nameHelp', className: 'form-text text-muted' },
+																								'The name of the item (title)'
+																				)
+																),
+																_react2.default.createElement(
+																				'div',
+																				{ className: 'form-group' },
+																				_react2.default.createElement(
+																								'label',
+																								{ htmlFor: 'thumbnailURL' },
+																								'Thumbnail URL'
+																				),
+																				_react2.default.createElement('input', { type: 'text', className: 'form-control', id: 'thumbnailURL', onChange: this.handleURLChange, placeholder: 'URL' })
+																),
+																_react2.default.createElement(
+																				'div',
+																				{ className: 'form-group' },
+																				_react2.default.createElement(
+																								'label',
+																								{ htmlFor: 'price' },
+																								'Starting Price (ether)'
+																				),
+																				_react2.default.createElement('input', { type: 'number', className: 'form-control', id: 'price', onChange: this.handlePriceChange })
+																),
+																_react2.default.createElement(
+																				'div',
+																				{ className: 'form-group' },
+																				_react2.default.createElement(
+																								'label',
+																								{ htmlFor: 'description' },
+																								'Description (255 characters)'
+																				),
+																				_react2.default.createElement('textarea', { className: 'form-control', id: 'description', rows: '3', onChange: this.handleDescriptionChange })
+																),
+																_react2.default.createElement(
+																				'fieldset',
+																				{ className: 'form-group' },
+																				_react2.default.createElement(
+																								'legend',
+																								null,
+																								'Timespan'
+																				),
+																				_react2.default.createElement(
+																								'div',
+																								{ className: 'form-check' },
+																								_react2.default.createElement(
+																												'label',
+																												{ className: 'form-check-label' },
+																												_react2.default.createElement('input', { type: 'radio', className: 'form-check-input', name: 'optionsRadios', id: 'optionsRadios1', value: '1', onChange: this.handleCommisionPlanChange }),
+																												' 24 Hours - Flat Rate (0.01 ether)'
+																								)
+																				),
+																				_react2.default.createElement(
+																								'div',
+																								{ className: 'form-check' },
+																								_react2.default.createElement(
+																												'label',
+																												{ className: 'form-check-label' },
+																												_react2.default.createElement('input', { type: 'radio', className: 'form-check-input', name: 'optionsRadios', id: 'optionsRadios2', value: '3', onChange: this.handleCommisionPlanChange }),
+																												' 3 Days - 10% Sales Comission'
+																								)
+																				),
+																				_react2.default.createElement(
+																								'div',
+																								{ className: 'form-check disabled' },
+																								_react2.default.createElement(
+																												'label',
+																												{ className: 'form-check-label' },
+																												_react2.default.createElement('input', { type: 'radio', className: 'form-check-input', name: 'optionsRadios', id: 'optionsRadios3', value: '7', onChange: this.handleCommisionPlanChange }),
+																												' 7 Days - 15% Sales Comission'
+																								)
+																				)
+																),
+																_react2.default.createElement(
+																				'div',
+																				{ className: 'form-check' },
+																				_react2.default.createElement(
+																								'label',
+																								{ className: 'form-check-label' },
+																								_react2.default.createElement('input', { type: 'checkbox', className: 'form-check-input' }),
+																								' I Agree that upon termination i will get charged a flat rate of 0.01 ether'
+																				)
+																),
+																_react2.default.createElement(
+																				'button',
+																				{ type: 'submit', id: 'submitAuction', className: 'btn btn-primary' },
+																				'Submit'
+																)
+												);
+								}
+				}]);
 
-   return App;
+				return AuctionForm;
+}(_react2.default.Component);
+
+var AuctionItem = function (_React$Component2) {
+				_inherits(AuctionItem, _React$Component2);
+
+				function AuctionItem(contractInstance) {
+								_classCallCheck(this, AuctionItem);
+
+								var _this2 = _possibleConstructorReturn(this, (AuctionItem.__proto__ || Object.getPrototypeOf(AuctionItem)).call(this));
+
+								_this2.instance = contractInstance;
+								return _this2;
+				}
+
+				_createClass(AuctionItem, [{
+								key: 'render',
+								value: function render() {
+												return _react2.default.createElement(
+																'div',
+																{ className: 'col-6 col-sm-6 col-md-4 col-lg-3' },
+																_react2.default.createElement(
+																				'div',
+																				{ className: 'auction-display' },
+																				_react2.default.createElement('div', { className: 'status-bar' }),
+																				_react2.default.createElement(
+																								'div',
+																								{ className: 'image-wraper' },
+																								_react2.default.createElement('img', { className: 'auction-item', src: this.getThumbnailURL() })
+																				),
+																				_react2.default.createElement(
+																								'div',
+																								{ className: 'description' },
+																								_react2.default.createElement(
+																												'h3',
+																												{ className: 'description-title' },
+																												this.getItemName
+																								),
+																								_react2.default.createElement(
+																												'a',
+																												{ className: 'description-desc' },
+																												this.getDescription
+																								),
+																								_react2.default.createElement(
+																												'div',
+																												null,
+																												_react2.default.createElement(
+																																'span',
+																																{ className: 'description-price' },
+																																this.getPrice
+																												)
+																								)
+																				),
+																				_react2.default.createElement(
+																								'button',
+																								{ className: 'button-bid' },
+																								'+ Details'
+																				)
+																)
+												);
+								}
+				}, {
+								key: 'getItemName',
+								value: function getItemName() {
+
+												this.instance.getItemName().then(function (err, res) {
+																if (err || !res) {
+																				return "Error";
+																}
+																return res;
+												});
+								}
+				}, {
+								key: 'getPrice',
+								value: function getPrice() {
+
+												this.instance.getItemPrice().then(function (err, res) {
+																if (err || !res) {
+																				return "Price error";
+																}
+
+																return parseInt(res);
+												});
+								}
+				}, {
+								key: 'getDescription',
+								value: function getDescription() {
+
+												this.instance.getDescription().then(function (err, res) {
+																if (err || !res) {
+																				return "Price error";
+																}
+
+																return res;
+												});
+								}
+				}, {
+								key: 'getThumbnailURL',
+								value: function getThumbnailURL() {
+												this.instance.getThumbnailURL().then(function (err, res) {
+																if (err || !res) {
+																				return "Error";
+																}
+
+																return res;
+												});
+								}
+				}]);
+
+				return AuctionItem;
+}(_react2.default.Component);
+
+var App = function (_React$Component3) {
+				_inherits(App, _React$Component3);
+
+				function App(auctionContract) {
+								_classCallCheck(this, App);
+
+								var _this3 = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this));
+
+								_this3.state = {
+												auctions: auctionContract || []
+								};
+
+								if (typeof web3 != 'undefined') {
+												console.log("Using web3 detected from external source like Metamask");
+												_this3.web3 = new _web2.default(web3.currentProvider);
+								} else {
+												_this3.web3 = new _web2.default(new _web2.default.providers.HttpProvider("http://localhost:8545"));
+								}
+								return _this3;
+				}
+
+				_createClass(App, [{
+								key: 'render',
+								value: function render() {
+												return _react2.default.createElement(
+																'div',
+																null,
+																_react2.default.createElement(
+																				'header',
+																				null,
+																				_react2.default.createElement(
+																								'div',
+																								{ className: 'contrast-section' },
+																								'As useless as it gets'
+																				),
+																				_react2.default.createElement(
+																								'nav',
+																								{ className: 'navbar navbar-expand-lg navbar-light' },
+																								_react2.default.createElement(
+																												'button',
+																												{ className: 'navbar-toggler', type: 'button', 'data-toggle': 'collapse', 'data-target': '#navbarNav', 'aria-controls': 'navbarNav', 'aria-expanded': 'false',
+																																'aria-label': 'Toggle navigation' },
+																												_react2.default.createElement('span', { className: 'navbar-toggler-icon' })
+																								),
+																								_react2.default.createElement(
+																												'div',
+																												{ className: 'collapse navbar-collapse', id: 'navbarNav' },
+																												_react2.default.createElement(
+																																'ul',
+																																{ className: 'navbar-nav' },
+																																_react2.default.createElement(
+																																				'li',
+																																				{ className: 'nav-item active' },
+																																				_react2.default.createElement(
+																																								'span',
+																																								null,
+																																								_react2.default.createElement(
+																																												'a',
+																																												{ className: 'nav-link', href: '#' },
+																																												'All'
+																																								)
+																																				)
+																																),
+																																_react2.default.createElement(
+																																				'li',
+																																				{ className: 'nav-item' },
+																																				_react2.default.createElement(
+																																								'span',
+																																								null,
+																																								_react2.default.createElement(
+																																												'a',
+																																												{ className: 'nav-link', href: '#', 'data-toggle': 'modal', 'data-target': '#detailsModal' },
+																																												'Active'
+																																								)
+																																				)
+																																),
+																																_react2.default.createElement(
+																																				'li',
+																																				{ className: 'nav-item' },
+																																				_react2.default.createElement(
+																																								'span',
+																																								null,
+																																								_react2.default.createElement(
+																																												'a',
+																																												{ className: 'nav-link', href: '#' },
+																																												'Inactive'
+																																								)
+																																				)
+																																)
+																												)
+																								),
+																								_react2.default.createElement(
+																												'a',
+																												{ className: 'navbar-brand centered', href: '#' },
+																												_react2.default.createElement('img', { src: './logo.png' })
+																								),
+																								_react2.default.createElement(
+																												'div',
+																												{ className: 'nav-item' },
+																												_react2.default.createElement(
+																																'ul',
+																																{ className: 'navbar-nav' },
+																																_react2.default.createElement(
+																																				'li',
+																																				{ className: 'nav-link' },
+																																				_react2.default.createElement(
+																																								'span',
+																																								{ className: 'offseted-left' },
+																																								_react2.default.createElement(
+																																												'a',
+																																												{ className: 'nav-link mr-sm-2', href: '#', 'data-toggle': 'modal', 'data-target': '#myModal' },
+																																												'Sell'
+																																								)
+																																				)
+																																)
+																												)
+																								)
+																				)
+																),
+																_react2.default.createElement(
+																				'main',
+																				null,
+																				_react2.default.createElement(
+																								'div',
+																								{ className: 'container-fluid' },
+																								_react2.default.createElement(
+																												'div',
+																												{ className: 'content' },
+																												'Powered by Bootstrap 4 and React'
+																								)
+																				),
+																				_react2.default.createElement(
+																								'div',
+																								{ className: 'container-fluid' },
+																								_react2.default.createElement(
+																												'div',
+																												{ className: 'row' },
+																												this.populateAuctions()
+																								)
+																				)
+																),
+																_react2.default.createElement(
+																				'footer',
+																				null,
+																				_react2.default.createElement(
+																								'div',
+																								{ className: 'container footer' },
+																								_react2.default.createElement(
+																												'div',
+																												null,
+																												_react2.default.createElement(
+																																'p',
+																																{ className: 'text-right' },
+																																'Powered by Bootstrap 4 and React'
+																												)
+																								)
+																				)
+																)
+												);
+								}
+				}, {
+								key: 'handleSubmit',
+								value: function handleSubmit(e) {
+												e.preventDefault();
+								}
+				}, {
+								key: 'populateAuctions',
+								value: function populateAuctions() {
+												//for(var instance in this.state.auctions){
+												//    new AuctionItem(instance).render();
+												//}
+								}
+				}]);
+
+				return App;
 }(_react2.default.Component);
 
 _reactDom2.default.render(_react2.default.createElement(App, null), document.querySelector('#root'));
+
+_reactDom2.default.render(_react2.default.createElement(AuctionForm, null), document.querySelector('#modal'));
 
 /***/ }),
 /* 47 */
@@ -15876,7 +16397,7 @@ exports = module.exports = __webpack_require__(73)();
 
 
 // module
-exports.push([module.i, "body{\n  font-family: 'open sans';\n  margin: 0;\n}\nul{\n  list-style-type: none;\n  padding-left: 0;\n  display: flex;\n}\nli{\n  padding: 40px;\n  border: 2px solid rgb(30,134,255);\n  margin-right: 5px;\n  border-radius: 10px;\n  cursor: pointer;\n}\nli:hover{\n  background-color: rgb(30,134,255);\n  color: white;\n}\nli:active{\n  opacity: 0.7;\n}\n*{\n color: #444444;\n}\n.main-container{\n padding: 20px;\n}\n.block{\n display: flex;\n align-items: center;\n}\n.number-selected{\n background-color: rgb(30,134,255);\n color: white;\n}\n.bet-input{\n padding: 15px;\n border-radius: 10px;\n border: 1px solid lightgrey;\n font-size: 15pt;\n margin: 0 10px;\n}", ""]);
+exports.push([module.i, "* {\n  box-sizing: border-box;\n  padding: 0;\n  margin: 0;\n}\n\nbody {\n  font-family: 'Saira Condensed', sans-serif !important;\n}\n\nnav ul li {\n  padding: 24px 10px 22px;\n  text-transform: uppercase;\n  line-height: 1;\n  letter-spacing: 1.5;\n}\n\nnav {\n  letter-spacing: 2px;\n  font-weight: 500;\n}\n\n.contrast-section {\n  background-color: #000000;\n  height: 42px;\n  max-height: 42px;\n  line-height: 42px;\n  text-align: center;\n  color: white;\n  padding: 0 15;\n  font-size: 12px;\n  text-transform: uppercase;\n  letter-spacing: 3px;\n}\n\nli span {\n  position: relative;\n  display: block;\n}\n\nli span::after {\n  content: '';\n  bottom: -5px;\n  left: 0;\n  right: 0;\n  opacity: 0;\n  height: 2px;\n  display: block;\n  background-color: black;\n  width: calc(100% - 20px);\n  position: absolute;\n  margin: 0 auto;\n  transition: 0.3s ease 0s, transform 0.3s ease 0s, -webkit-transform 0.3s ease 0s;\n}\n\nli span.offseted-left::after {\n  content: '';\n  bottom: -5px;\n  left: -8px;\n  right: 0;\n  opacity: 0;\n  height: 2px;\n  display: block;\n  background-color: black;\n  width: calc(100% - 20px);\n  position: absolute;\n  margin: 0 auto;\n  transition: 0.3s ease 0s, transform 0.3s ease 0s, -webkit-transform 0.3s ease 0s;\n}\n\nli span:hover::after {\n  opacity: 1;\n}\n\nli span.offseted-left:hover::after {\n  opacity: 1;\n}\n\n.content {\n  border-bottom: 1px solid #f7f8f9;\n  background: linear-gradient(0deg, #fff 0%, #FAFAFA 100%);\n  padding: 16px;\n  font-weight: 500;\n}\n\n.main {\n  background-color: #FAFAFA;\n}\n\n.auction-display {\n  padding: 39 0 41 0;\n  cursor: pointer;\n  position: relative;\n}\n\n.image-wraper {\n  display: block;\n  position: relative;\n  margin: 0 auto;\n}\n\n.image-wraper img {\n  vertical-align: bottom;\n  height: auto;\n}\n\n.auction-item {\n  max-width: 280px;\n  width: 100%;\n  margin: 0 auto;\n}\n\n.description {\n  margin: 25 0 15;\n  text-align: center;\n  letter-spacing: 1.5;\n  max-width: 280px;\n}\n\n.description-title {\n  margin: 0;\n  font-size: 16px;\n  letter-spacing: 2px;\n  color: #929292;\n  line-height: 16px;\n}\n\n.description-desc {\n  margin: 8 4;\n  clear: both;\n  font-weight: bold;\n}\n\n.description-price {\n  font-size: 16px;\n  line-height: 16px;\n  font-weight: 500;\n  letter-spacing: 1.5px;\n  padding-top: 4px;\n}\n\n.button-bid {\n  position: absolute;\n  bottom: -52px;\n  width: 99%;\n  opacity: 0;\n  padding: 0 12px;\n  line-height: 30px;\n  text-align: center;\n  border: 1px solid #000;\n  color: #000;\n  -webkit-transition: all 0.25s ease-out;\n  transition: all 0.25s ease-out;\n  font-size: 12px;\n  background-color: transparent;\n  letter-spacing: 3px;\n  text-transform: uppercase;\n  font-size: 16px;\n  cursor: pointer;\n}\n\n.button-bid:hover {\n  background-color: black;\n  color: white;\n}\n\n@media (min-width: 992px) {\n  div#navbarNav.collapse.nav-collapse {\n      flex-grow: 0;\n  }\n  .centered {\n      margin-right: 41%;\n  }\n  .description {\n      margin: 25 0;\n      text-align: center;\n      letter-spacing: 1.5;\n  }\n  .button-bid {\n      padding: 0.5rem 0.25rem !important;\n  }\n}\n\n@media (max-width: 992px) {\n  li a.nav-link:hover::after {\n      opacity: 0;\n  }\n\n}\n\n@media (min-width: 1024px){\n  .image-wraper{\n      width: 100%;\n      margin-left: 10px;\n  }\n}\n.preview {\n  display: -webkit-box;\n  display: -webkit-flex;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n  -webkit-flex-direction: column;\n      -ms-flex-direction: column;\n          flex-direction: column; }\n  @media screen and (max-width: 996px) {\n    .preview {\n      margin-bottom: 20px; } }\n\n.preview-pic {\n  -webkit-box-flex: 1;\n  -webkit-flex-grow: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1; }\n\n.preview-thumbnail.nav-tabs {\n  border: none;\n  margin-top: 15px; }\n  .preview-thumbnail.nav-tabs li {\n    width: 18%;\n    margin-right: 2.5%; }\n    .preview-thumbnail.nav-tabs li img {\n      max-width: 100%;\n      display: block; }\n    .preview-thumbnail.nav-tabs li a {\n      padding: 0;\n      margin: 0; }\n    .preview-thumbnail.nav-tabs li:last-of-type {\n      margin-right: 0; }\n\n.tab-content {\n  overflow: hidden; }\n  .tab-content img {\n    width: 100%;\n    -webkit-animation-name: opacity;\n            animation-name: opacity;\n    -webkit-animation-duration: .3s;\n            animation-duration: .3s; }\n\n.card {\n  margin-top: 50px;\n  background: #eee;\n  padding: 3em;\n  line-height: 1.5em; }\n\n@media screen and (min-width: 997px) {\n  .wrapper {\n    display: -webkit-box;\n    display: -webkit-flex;\n    display: -ms-flexbox;\n    display: flex; } }\n\n.details {\n  display: -webkit-box;\n  display: -webkit-flex;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n  -webkit-flex-direction: column;\n      -ms-flex-direction: column;\n          flex-direction: column; }\n\n.colors {\n  -webkit-box-flex: 1;\n  -webkit-flex-grow: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1; }\n\n.product-title, .price, .sizes, .colors {\n  text-transform: UPPERCASE;\n  font-weight: bold; }\n\n.checked, .price span {\n  color: #ff9f1a; }\n\n.product-title, .rating, .product-description, .price, .vote, .sizes {\n  margin-bottom: 15px; }\n\n.product-title {\n  margin-top: 0; }\n\n.size {\n  margin-right: 10px; }\n  .size:first-of-type {\n    margin-left: 40px; }\n\n.color {\n  display: inline-block;\n  vertical-align: middle;\n  margin-right: 10px;\n  height: 2em;\n  width: 2em;\n  border-radius: 2px; }\n  .color:first-of-type {\n    margin-left: 20px; }\n\n.add-to-cart, .like {\n  background: #ff9f1a;\n  padding: 1.2em 1.5em;\n  border: none;\n  text-transform: UPPERCASE;\n  font-weight: bold;\n  color: #fff;\n  -webkit-transition: background .3s ease;\n          transition: background .3s ease; }\n  .add-to-cart:hover, .like:hover {\n    background: #b36800;\n    color: #fff; }\n\n.not-available {\n  text-align: center;\n  line-height: 2em; }\n  .not-available:before {\n    font-family: fontawesome;\n    content: \"\\F00D\";\n    color: #fff; }\n\n.orange {\n  background: #ff9f1a; }\n\n.green {\n  background: #85ad00; }\n\n.blue {\n  background: #0076ad; }\n\n.tooltip-inner {\n  padding: 1.3em; }\n\n@-webkit-keyframes opacity {\n  0% {\n    opacity: 0;\n    -webkit-transform: scale(3);\n            transform: scale(3); }\n  100% {\n    opacity: 1;\n    -webkit-transform: scale(1);\n            transform: scale(1); } }\n\n@keyframes opacity {\n  0% {\n    opacity: 0;\n    -webkit-transform: scale(3);\n            transform: scale(3); }\n  100% {\n    opacity: 1;\n    -webkit-transform: scale(1);\n            transform: scale(1); } }\n", ""]);
 
 // exports
 

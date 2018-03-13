@@ -12,6 +12,10 @@ module.exports = {
     new CopyWebpackPlugin([{
       from: './app/index.html',
       to: "index.html"
+    }]),
+    new CopyWebpackPlugin([{
+      from: './app/stylesheets',
+      to: 'stylesheets'
     }])
   ],
   module: {

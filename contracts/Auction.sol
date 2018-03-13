@@ -20,9 +20,8 @@ contract Auction is Temporary, HashLocked {
     event Start(address initiator, uint256 timestamp);
     event End(address winner, uint256 timestamp);
     event Bidding(address bidder, uint256 amount);
-
-
-    event Terminated();
+    // The auction can be terminated and as such has to notify
+    event Terminated(uint256 timestamp);
 
     modifier ownerOnly() {
         if (msg.sender != owner) {
@@ -36,10 +35,16 @@ contract Auction is Temporary, HashLocked {
     /// The MaximumCharactersInYourTitle
     uint8 public constant MAX_TITLE_LENGTH = 50;
 
+    /// Authorized bidders
     mapping ( address => bool ) private bidders;
-
+    
+    /// The actual bids ( amount )
     mapping ( address => uint256 ) private bids;
-    mapping ( address => string) private secrets;
+
+    /// Bidders' secret words (required for successfull change of item ownership);
+    /// After the auction ends the winning bidder sends his secret after receiving
+    /// the item, so the seller can withdraw his bid successfully
+    mapping ( address => bytes32) private secrets;
 
     /// AuctionItem struct provides way to store different auction items
     struct AuctionItem {
@@ -52,7 +57,12 @@ contract Auction is Temporary, HashLocked {
 
     }
 
+    /// The actual item you are selling
     AuctionItem public item;
+
+    /// The timespan of the contract (comission is based on this timespan)
+    uint256 public span;
+    uint256 public timestamp;
 
     /// The owner of the contract ( the seller )
     address private owner;
@@ -66,7 +76,9 @@ contract Auction is Temporary, HashLocked {
                     string _title, 
                     string _description, 
                     string _thumbnailURL, 
-                    uint256 _startPrice)
+                    uint256 _startPrice,
+                    uint256 _timespan
+                    )
         public 
     {
         owner = msg.sender;
@@ -79,13 +91,22 @@ contract Auction is Temporary, HashLocked {
         item.description = _description;
         item.startPrice = _startPrice;
         item.thumbnailURL = _thumbnailURL;
+        
+        timestamp = block.number;
+        span = _timespan;
+        Start(msg.sender, timestamp);
     }
+
+    /// If everything else fails (fallback)
+    function() public payable {}
 
     function bid() 
         public 
         payable 
     {
         require(msg.value > 0);
+        require(bidders[msg.sender] == true);
+        require(today() - timestamp < span);
         Bidding(msg.sender, msg.value);
     }
 
@@ -97,13 +118,40 @@ contract Auction is Temporary, HashLocked {
         public 
         ownerOnly 
     {
+        uint256 timestamp = block.number;
+        Terminated(timestamp);
         selfdestruct(owner);
+    }
+
+    function allowBidder(address _addr, string _secret) public {
+        bidders[_addr] = true;
+        secrets[_addr] = keccak256(_secret);
     }
 
     function withdrawBid() public {
         require(bids[msg.sender] > 0);
         uint256 amountToSend = bids[msg.sender];
         msg.sender.transfer(amountToSend);
+    }
+
+    function today() public view returns (uint256) {
+        return now / 1 days;
+    }
+
+    function getItemName() public view returns (string) {
+        return item.itemName;
+    }
+
+    function getDescription() public view returns (string) {
+        return item.description;
+    }
+ 
+    function getPrice() public view returns (uint256) {
+        return item.startPrice;
+    }
+
+    function getThumbnailURL() public view returns (string) {
+        return item.thumbnailURL;
     }
 
 }
