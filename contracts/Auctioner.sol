@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity ^0.4.18;
 
 
 /**
@@ -23,7 +23,9 @@ contract Auctioner {
         owner = msg.sender;
     }
 
-    function() public payable {}
+    function() public payable {
+        PayedComission(msg.sender, now);
+    }
 
     function withdrawComission() public ownerOnly {
         require(this.balance > 0);

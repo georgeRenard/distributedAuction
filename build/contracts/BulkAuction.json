@@ -1,0 +1,270 @@
+{
+  "contractName": "BulkAuction",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "name": "_auctions",
+          "type": "address[]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    }
+  ],
+  "bytecode": "0x6060604052341561000f57600080fd5b604051610158380380610158833981016040528080518201919050508060009080519060200190610041929190610048565b5050610115565b8280548282559060005260206000209081019282156100c1579160200282015b828111156100c05782518260006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555091602001919060010190610068565b5b5090506100ce91906100d2565b5090565b61011291905b8082111561010e57600081816101000a81549073ffffffffffffffffffffffffffffffffffffffff0219169055506001016100d8565b5090565b90565b6035806101236000396000f3006060604052600080fd00a165627a7a723058209e57476484c5ed20a61265d74301288cb065e0cae9960d809f0e249bc4a4b2290029",
+  "deployedBytecode": "0x6060604052600080fd00a165627a7a723058209e57476484c5ed20a61265d74301288cb065e0cae9960d809f0e249bc4a4b2290029",
+  "sourceMap": "397:178:2:-;;;462:108;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;551:9;540:8;:20;;;;;;;;;;;;:::i;:::-;;462:108;397:178;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;:::o;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;:::-;;;;;;;",
+  "deployedSourceMap": "397:178:2:-;;;;;",
+  "source": "pragma solidity ^0.4.18;\r\n\r\nimport \"./Auction.sol\";\r\n\r\n\r\n/// The Bulk Auction Contract provides a way for the seller\r\n/// to minimize his costs while maximizing his sales revenue\r\n/// Selling multiple items with BulkAuction Contract will\r\n/// decrease the comission the sell pays. Instead of paying\r\n/// higher comission rate on a single item, he will pay lower\r\n/// comission rate on net sales.\r\ncontract BulkAuction {\r\n\r\n    Auction[] private auctions;\r\n\r\n    function BulkAuction(Auction[] _auctions) \r\n        public \r\n    {\r\n\r\n        auctions = _auctions;\r\n\r\n    }\r\n\r\n}",
+  "sourcePath": "C:\\Users\\G_ANGELOV\\Desktop\\Softuni\\blockchain-devcamp\\bogo-dapp-proj\\contracts\\BulkAuction.sol",
+  "ast": {
+    "attributes": {
+      "absolutePath": "/C/Users/G_ANGELOV/Desktop/Softuni/blockchain-devcamp/bogo-dapp-proj/contracts/BulkAuction.sol",
+      "exportedSymbols": {
+        "BulkAuction": [
+          602
+        ]
+      }
+    },
+    "children": [
+      {
+        "attributes": {
+          "literals": [
+            "solidity",
+            "^",
+            "0.4",
+            ".18"
+          ]
+        },
+        "id": 586,
+        "name": "PragmaDirective",
+        "src": "0:24:2"
+      },
+      {
+        "attributes": {
+          "SourceUnit": 524,
+          "absolutePath": "/C/Users/G_ANGELOV/Desktop/Softuni/blockchain-devcamp/bogo-dapp-proj/contracts/Auction.sol",
+          "file": "./Auction.sol",
+          "scope": 603,
+          "symbolAliases": [
+            null
+          ],
+          "unitAlias": ""
+        },
+        "id": 587,
+        "name": "ImportDirective",
+        "src": "28:23:2"
+      },
+      {
+        "attributes": {
+          "baseContracts": [
+            null
+          ],
+          "contractDependencies": [
+            null
+          ],
+          "contractKind": "contract",
+          "documentation": "The Bulk Auction Contract provides a way for the seller\r\n to minimize his costs while maximizing his sales revenue\r\n Selling multiple items with BulkAuction Contract will\r\n decrease the comission the sell pays. Instead of paying\r\n higher comission rate on a single item, he will pay lower\r\n comission rate on net sales.\r",
+          "fullyImplemented": true,
+          "linearizedBaseContracts": [
+            602
+          ],
+          "name": "BulkAuction",
+          "scope": 603
+        },
+        "children": [
+          {
+            "attributes": {
+              "constant": false,
+              "name": "auctions",
+              "scope": 602,
+              "stateVariable": true,
+              "storageLocation": "default",
+              "type": "contract Auction[] storage ref",
+              "value": null,
+              "visibility": "private"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "length": null,
+                  "type": "contract Auction[] storage pointer"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "contractScope": null,
+                      "name": "Auction",
+                      "referencedDeclaration": 523,
+                      "type": "contract Auction"
+                    },
+                    "id": 588,
+                    "name": "UserDefinedTypeName",
+                    "src": "427:7:2"
+                  }
+                ],
+                "id": 589,
+                "name": "ArrayTypeName",
+                "src": "427:9:2"
+              }
+            ],
+            "id": 590,
+            "name": "VariableDeclaration",
+            "src": "427:26:2"
+          },
+          {
+            "attributes": {
+              "constant": false,
+              "implemented": true,
+              "isConstructor": true,
+              "modifiers": [
+                null
+              ],
+              "name": "BulkAuction",
+              "payable": false,
+              "scope": 602,
+              "stateMutability": "nonpayable",
+              "superFunction": null,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "_auctions",
+                      "scope": 601,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "contract Auction[] memory",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "length": null,
+                          "type": "contract Auction[] storage pointer"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "contractScope": null,
+                              "name": "Auction",
+                              "referencedDeclaration": 523,
+                              "type": "contract Auction"
+                            },
+                            "id": 591,
+                            "name": "UserDefinedTypeName",
+                            "src": "483:7:2"
+                          }
+                        ],
+                        "id": 592,
+                        "name": "ArrayTypeName",
+                        "src": "483:9:2"
+                      }
+                    ],
+                    "id": 593,
+                    "name": "VariableDeclaration",
+                    "src": "483:19:2"
+                  }
+                ],
+                "id": 594,
+                "name": "ParameterList",
+                "src": "482:21:2"
+              },
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 595,
+                "name": "ParameterList",
+                "src": "527:0:2"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "operator": "=",
+                          "type": "contract Auction[] storage ref"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 590,
+                              "type": "contract Auction[] storage ref",
+                              "value": "auctions"
+                            },
+                            "id": 596,
+                            "name": "Identifier",
+                            "src": "540:8:2"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 593,
+                              "type": "contract Auction[] memory",
+                              "value": "_auctions"
+                            },
+                            "id": 597,
+                            "name": "Identifier",
+                            "src": "551:9:2"
+                          }
+                        ],
+                        "id": 598,
+                        "name": "Assignment",
+                        "src": "540:20:2"
+                      }
+                    ],
+                    "id": 599,
+                    "name": "ExpressionStatement",
+                    "src": "540:20:2"
+                  }
+                ],
+                "id": 600,
+                "name": "Block",
+                "src": "527:43:2"
+              }
+            ],
+            "id": 601,
+            "name": "FunctionDefinition",
+            "src": "462:108:2"
+          }
+        ],
+        "id": 602,
+        "name": "ContractDefinition",
+        "src": "397:178:2"
+      }
+    ],
+    "id": 603,
+    "name": "SourceUnit",
+    "src": "0:575:2"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.19+commit.c4cbbb05.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "1.0.1",
+  "updatedAt": "2018-03-17T12:47:21.542Z"
+}

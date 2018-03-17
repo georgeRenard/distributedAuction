@@ -1,0 +1,154 @@
+{
+  "contractName": "HashLocked",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "Locked",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [],
+      "name": "Unlocked",
+      "type": "event"
+    }
+  ],
+  "bytecode": "0x60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00a165627a7a72305820900c656f6d5336d2fa36c5e71e2b4da48cf71fe0308e022f8b02fc9cccc763830029",
+  "deployedBytecode": "0x6060604052600080fd00a165627a7a72305820900c656f6d5336d2fa36c5e71e2b4da48cf71fe0308e022f8b02fc9cccc763830029",
+  "sourceMap": "30:89:2:-;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "30:89:2:-;;;;;",
+  "source": "pragma solidity ^0.4.18;\r\n\r\n\r\ncontract HashLocked {\r\n\r\n    event Locked(uint256 timestamp);\r\n    event Unlocked();\r\n\r\n}",
+  "sourcePath": "C:\\Users\\G_ANGELOV\\Desktop\\Softuni\\blockchain-devcamp\\bogo-dapp-proj\\contracts\\bases\\HashLocked.sol",
+  "ast": {
+    "attributes": {
+      "absolutePath": "/C/Users/G_ANGELOV/Desktop/Softuni/blockchain-devcamp/bogo-dapp-proj/contracts/bases/HashLocked.sol",
+      "exportedSymbols": {
+        "HashLocked": [
+          589
+        ]
+      }
+    },
+    "children": [
+      {
+        "attributes": {
+          "literals": [
+            "solidity",
+            "^",
+            "0.4",
+            ".18"
+          ]
+        },
+        "id": 582,
+        "name": "PragmaDirective",
+        "src": "0:24:2"
+      },
+      {
+        "attributes": {
+          "baseContracts": [
+            null
+          ],
+          "contractDependencies": [
+            null
+          ],
+          "contractKind": "contract",
+          "documentation": null,
+          "fullyImplemented": true,
+          "linearizedBaseContracts": [
+            589
+          ],
+          "name": "HashLocked",
+          "scope": 590
+        },
+        "children": [
+          {
+            "attributes": {
+              "anonymous": false,
+              "name": "Locked"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "indexed": false,
+                      "name": "timestamp",
+                      "scope": 586,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "uint256",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "uint256",
+                          "type": "uint256"
+                        },
+                        "id": 583,
+                        "name": "ElementaryTypeName",
+                        "src": "72:7:2"
+                      }
+                    ],
+                    "id": 584,
+                    "name": "VariableDeclaration",
+                    "src": "72:17:2"
+                  }
+                ],
+                "id": 585,
+                "name": "ParameterList",
+                "src": "71:19:2"
+              }
+            ],
+            "id": 586,
+            "name": "EventDefinition",
+            "src": "59:32:2"
+          },
+          {
+            "attributes": {
+              "anonymous": false,
+              "name": "Unlocked"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 587,
+                "name": "ParameterList",
+                "src": "111:2:2"
+              }
+            ],
+            "id": 588,
+            "name": "EventDefinition",
+            "src": "97:17:2"
+          }
+        ],
+        "id": 589,
+        "name": "ContractDefinition",
+        "src": "30:89:2"
+      }
+    ],
+    "id": 590,
+    "name": "SourceUnit",
+    "src": "0:119:2"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.19+commit.c4cbbb05.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "1.0.1",
+  "updatedAt": "2018-03-17T14:20:17.706Z"
+}

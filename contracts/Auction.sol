@@ -1,8 +1,9 @@
-pragma solidity 0.4.18;
+pragma solidity ^0.4.18;
 
 
-import "./interfaces/Temporary.sol";
-import "./interfaces/HashLocked.sol";
+import "./interfaces/TimeLocked.sol";
+import "./bases/HashLocked.sol";
+import "./Auctioner.sol";
 
 
 /// Auction smart contract is a contract which represents an auction
@@ -14,10 +15,12 @@ import "./interfaces/HashLocked.sol";
 /// all the funds go to the owner of the contract (the seller) and 
 /// all users users are scrwd. 
 /// @dev Temporary.sol
-contract Auction is Temporary, HashLocked {
+contract Auction is TimeLocked, HashLocked {
+
+    Auctioner private auctioner;
 
     /// The auction starts 
-    event Start(address initiator, uint256 timestamp);
+    event Start(address initiator, uint256 timestamp, uint8 span);
     event End(address winner, uint256 timestamp);
     event Bidding(address bidder, uint256 amount);
     // The auction can be terminated and as such has to notify
@@ -30,10 +33,23 @@ contract Auction is Temporary, HashLocked {
         _;
     }
 
+    modifier authorizedBidderOnly(string _secret) {
+        require(bidders[msg.sender]);
+        require(sha256(_secret) == secrets[msg.sender]);
+        _;
+    }
+
+    modifier ifActive() {
+        assert(!terminated);
+        _;
+    }
+
     /// The MaximumDescriptionLength you are allowed to have on an item
-    uint8 public constant MAX_DESCRIPTION_LENGTH = 255;
+    uint16 public constant MAX_DESCRIPTION_LENGTH = 1024;
     /// The MaximumCharactersInYourTitle
     uint8 public constant MAX_TITLE_LENGTH = 50;
+    /// The default flat comission charged on termination (around 0.001 ether or 0.6 USD A.T.M)
+    uint256 private constant DEFAULT_FLAT_COMISSION = 1000 szabo;
 
     /// Authorized bidders
     mapping ( address => bool ) private bidders;
@@ -58,55 +74,89 @@ contract Auction is Temporary, HashLocked {
     }
 
     /// The actual item you are selling
-    AuctionItem public item;
+    AuctionItem private item;
 
     /// The timespan of the contract (comission is based on this timespan)
-    uint256 public span;
+    uint8 private span;
     uint256 public timestamp;
+
+    /// Is the contract terminated
+    bool private terminated = false;
 
     /// The owner of the contract ( the seller )
     address private owner;
     
+    /// The address which the current maximum bid was sent from
+    address private currentMaxBidderAddress;
+
+    /// Current maximum bid
+    uint256 private maximumBid;
+
     /// Auction constructor which initializes the contract
+    /// @param _auctioner - The auctioner contract that receives the comission
     /// @param _title - The title/name of the item
     /// @param _description - The description of the item you are selling
     /// @param _thumbnailURL - The thumbnail of your offer
     /// @param _startPrice - The initial price of your offer
+    /// @param _timespan - The time-span of your auction (1 day, 3 days, 7 days)
+    /// Upon auction creation you have to deposit a {_startPrice} amount in your
+    /// contract in case you terminate or have to pay comission (no money in the contract -> no comission)
+    /// The _startPrice cannot be less than the flat comission you are charged upon termination
     function Auction(
+                    Auctioner _auctioner,
                     string _title, 
                     string _description, 
                     string _thumbnailURL, 
                     uint256 _startPrice,
-                    uint256 _timespan
+                    uint8 _timespan
                     )
-        public 
+        public
+        payable
     {
-        owner = msg.sender;
-        //require(_title < MAX_TITLE_LENGTH,
-        //    "Your title should be less than 50 characters");
-        //require(_description < MAX_DESCRIPTION_LENGTH, 
-        //    "Your description should be less than 255 characters");
+        /// Setting the owner of the contract
+        require(bytes(_title).length < MAX_TITLE_LENGTH);
+        require(bytes(_description).length < MAX_DESCRIPTION_LENGTH);
+        require(msg.value >= _startPrice);
+        require(_startPrice >= DEFAULT_FLAT_COMISSION);
+        require(_timespan == 1 || _timespan == 3 || _timespan == 7);
 
+        Start(msg.sender, now, _timespan);
+
+        /// Populating the Auction item structure
         item.itemName = _title;
         item.description = _description;
         item.startPrice = _startPrice;
         item.thumbnailURL = _thumbnailURL;
         
-        timestamp = block.number;
+        /// Defining the auctioneer (the comission is sent to the contract)
+        auctioner = _auctioner;
+        timestamp = now;
         span = _timespan;
-        Start(msg.sender, timestamp);
     }
 
     /// If everything else fails (fallback)
     function() public payable {}
 
+    /// The bid function is used for bids on the current Auction Contract Item
+    /// You can bids only if you are a registered bidder
+    /// Multiple assertions are made in order for the process to run smoothly without error
+    /// At the end an Event is Fired @dev event Bidding(address sender, uin256 value)
     function bid() 
         public 
-        payable 
+        payable
+        ifActive
     {
+
         require(msg.value > 0);
-        require(bidders[msg.sender] == true);
-        require(today() - timestamp < span);
+        require(msg.value > maximumBid);
+        require(msg.value > item.startPrice);
+        require(bids[msg.sender] + msg.value > bids[msg.sender]);
+
+        assert(bidders[msg.sender]);
+        assert(timestamp + span < now);
+
+        uint256 oldBid = bids[msg.sender];
+        bids[msg.sender] = oldBid + msg.value;
         Bidding(msg.sender, msg.value);
     }
 
@@ -117,25 +167,44 @@ contract Auction is Temporary, HashLocked {
     function terminate() 
         public 
         ownerOnly 
-    {
-        uint256 timestamp = block.number;
-        Terminated(timestamp);
-        selfdestruct(owner);
+    {  
+        assert(!terminated);
+        Terminated(now);
+        terminated = true;
     }
 
-    function allowBidder(address _addr, string _secret) public {
+    function allowBidder(address _addr, string _secret) public ifActive {
+        require(msg.sender == _addr);
+        require(!bidders[_addr]);
         bidders[_addr] = true;
-        secrets[_addr] = keccak256(_secret);
+        secrets[_addr] = sha256(_secret);
     }
 
-    function withdrawBid() public {
+    function withdrawBid(string _secret) public authorizedBidderOnly(_secret) {
+        require(msg.sender != currentMaxBidderAddress);
         require(bids[msg.sender] > 0);
         uint256 amountToSend = bids[msg.sender];
+        bids[msg.sender] = 0;
+        assert(this.balance >= amountToSend);
+        assert(bids[msg.sender] == 0);
         msg.sender.transfer(amountToSend);
     }
 
-    function today() public view returns (uint256) {
-        return now / 1 days;
+    function getRemainingTime() public view ifActive returns (uint256) {
+        assert(!hasEnded());
+        return now - (timestamp + span);
+    }
+
+    function getLifespan() public view returns (uint8) {
+        return span;
+    }
+
+    function hasEnded() public view returns (bool) {
+        return timestamp + span >= now;
+    }
+
+    function isTerminated() public view returns (bool) {
+        return terminated;
     }
 
     function getItemName() public view returns (string) {
