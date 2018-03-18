@@ -20,9 +20,10 @@ contract Auction is TimeLocked, HashLocked {
     Auctioner private auctioner;
 
     /// The auction starts 
-    event Start(address initiator, uint256 timestamp, uint8 span);
+    event Start(address initiator, uint256 timestamp, uint256 span);
     event End(address winner, uint256 timestamp);
     event Bidding(address bidder, uint256 amount);
+    event BidderAuthorized(address bidder, uint256 timestamp);
     // The auction can be terminated and as such has to notify
     event Terminated(uint256 timestamp);
 
@@ -77,11 +78,18 @@ contract Auction is TimeLocked, HashLocked {
     AuctionItem private item;
 
     /// The timespan of the contract (comission is based on this timespan)
-    uint8 private span;
+    uint256 private span;
+
+    /// The actual span in days
+    uint8 private spanInDays;
+
+    /// The time of creation
     uint256 public timestamp;
 
     /// Is the contract terminated
     bool private terminated = false;
+    /// Is the auction finished
+    bool private finished = false;
 
     /// The owner of the contract ( the seller )
     address private owner;
@@ -108,7 +116,7 @@ contract Auction is TimeLocked, HashLocked {
                     string _description, 
                     string _thumbnailURL, 
                     uint256 _startPrice,
-                    uint8 _timespan
+                    uint256 _timespan
                     )
         public
         payable
@@ -131,7 +139,9 @@ contract Auction is TimeLocked, HashLocked {
         /// Defining the auctioneer (the comission is sent to the contract)
         auctioner = _auctioner;
         timestamp = now;
-        span = _timespan;
+        span = _timespan * 24 * 3600;
+        /// The conversion is safe because there is an assertion that ensures it above
+        spanInDays = uint8(_timespan);
     }
 
     /// If everything else fails (fallback)
@@ -153,11 +163,17 @@ contract Auction is TimeLocked, HashLocked {
         require(bids[msg.sender] + msg.value > bids[msg.sender]);
 
         assert(bidders[msg.sender]);
-        assert(timestamp + span < now);
+        assert(!hasEnded());
 
-        uint256 oldBid = bids[msg.sender];
-        bids[msg.sender] = oldBid + msg.value;
         Bidding(msg.sender, msg.value);
+    
+        uint256 oldBid = bids[msg.sender];
+        uint256 newBid = oldBid + msg.value;
+
+        bids[msg.sender] = newBid;
+        
+        maximumBid = newBid;
+        currentMaxBidderAddress = msg.sender;
     }
 
     /// Terminate initiates a time lock on the contract and the auctioner
@@ -168,16 +184,28 @@ contract Auction is TimeLocked, HashLocked {
         public 
         ownerOnly 
     {  
+
         assert(!terminated);
         Terminated(now);
+
         terminated = true;
+        if (this.balance < DEFAULT_FLAT_COMISSION) {
+            selfdestruct(auctioner);
+        } else {
+            auctioner.transfer(DEFAULT_FLAT_COMISSION);
+        }
     }
 
     function allowBidder(address _addr, string _secret) public ifActive {
         require(msg.sender == _addr);
         require(!bidders[_addr]);
+        assert(!finished);
+        
+        BidderAuthorized(_addr, now);
+
         bidders[_addr] = true;
         secrets[_addr] = sha256(_secret);
+        bids[_addr] = 0;
     }
 
     function withdrawBid(string _secret) public authorizedBidderOnly(_secret) {
@@ -190,17 +218,44 @@ contract Auction is TimeLocked, HashLocked {
         msg.sender.transfer(amountToSend);
     }
 
-    function getRemainingTime() public view ifActive returns (uint256) {
-        assert(!hasEnded());
-        return now - (timestamp + span);
+    /// Withdrawing the winning bid using the users secret
+    function withdrawWinningBid(string _secret) public ownerOnly ifActive {
+
+        require(hasEnded());
+        require(maximumBid > item.startPrice);
+        require(sha256(_secret) == secrets[currentMaxBidderAddress]);
+        require(this.balance > maximumBid);
+
+        End(currentMaxBidderAddress, now);
+    
+        /// Make transfers
+
     }
 
-    function getLifespan() public view returns (uint8) {
+    function getMaxBidderAddress() public view ownerOnly returns(address) {
+        return currentMaxBidderAddress;
+    }
+
+    function getMaximumBid() public view returns (uint256) {
+        return maximumBid;
+    }
+
+    function getRemainingTime() public view ifActive returns (uint256) {
+        assert(!hasEnded());
+        uint256 remainingTime = span - (now - timestamp);
+        return remainingTime;
+    }
+
+    function isAuthorizedBidder(address _addr) public view returns(bool) {
+        return bidders[_addr];
+    }
+
+    function getLifespan() public view returns (uint256) {
         return span;
     }
 
     function hasEnded() public view returns (bool) {
-        return timestamp + span >= now;
+        return timestamp + span <= now;
     }
 
     function isTerminated() public view returns (bool) {

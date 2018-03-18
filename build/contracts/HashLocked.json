@@ -31,7 +31,7 @@
       "absolutePath": "/C/Users/G_ANGELOV/Desktop/Softuni/blockchain-devcamp/bogo-dapp-proj/contracts/bases/HashLocked.sol",
       "exportedSymbols": {
         "HashLocked": [
-          589
+          740
         ]
       }
     },
@@ -45,7 +45,7 @@
             ".18"
           ]
         },
-        "id": 582,
+        "id": 733,
         "name": "PragmaDirective",
         "src": "0:24:2"
       },
@@ -61,10 +61,10 @@
           "documentation": null,
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            589
+            740
           ],
           "name": "HashLocked",
-          "scope": 590
+          "scope": 741
         },
         "children": [
           {
@@ -80,7 +80,7 @@
                       "constant": false,
                       "indexed": false,
                       "name": "timestamp",
-                      "scope": 586,
+                      "scope": 737,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -93,22 +93,22 @@
                           "name": "uint256",
                           "type": "uint256"
                         },
-                        "id": 583,
+                        "id": 734,
                         "name": "ElementaryTypeName",
                         "src": "72:7:2"
                       }
                     ],
-                    "id": 584,
+                    "id": 735,
                     "name": "VariableDeclaration",
                     "src": "72:17:2"
                   }
                 ],
-                "id": 585,
+                "id": 736,
                 "name": "ParameterList",
                 "src": "71:19:2"
               }
             ],
-            "id": 586,
+            "id": 737,
             "name": "EventDefinition",
             "src": "59:32:2"
           },
@@ -125,22 +125,22 @@
                   ]
                 },
                 "children": [],
-                "id": 587,
+                "id": 738,
                 "name": "ParameterList",
                 "src": "111:2:2"
               }
             ],
-            "id": 588,
+            "id": 739,
             "name": "EventDefinition",
             "src": "97:17:2"
           }
         ],
-        "id": 589,
+        "id": 740,
         "name": "ContractDefinition",
         "src": "30:89:2"
       }
     ],
-    "id": 590,
+    "id": 741,
     "name": "SourceUnit",
     "src": "0:119:2"
   },
@@ -150,5 +150,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-03-17T16:53:09.085Z"
+  "updatedAt": "2018-03-18T16:57:09.150Z"
 }

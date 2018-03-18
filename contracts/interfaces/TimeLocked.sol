@@ -11,7 +11,7 @@ contract TimeLocked {
     event Terminated(uint256 timestamp);
     
     function getRemainingTime() public view returns (uint256);
-    function getLifespan() public view returns (uint8);
+    function getLifespan() public view returns (uint256);
     function hasEnded() public view returns (bool);
     function isTerminated() public view returns (bool);
 

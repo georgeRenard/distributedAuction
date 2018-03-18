@@ -5,7 +5,8 @@
   "scripts": {
     "lint": "eslint ./",
     "build": "webpack",
-    "dev": "webpack-dev-server"
+    "dev": "webpack-dev-server",
+    "deploy": "truffle compile && truffle migrate && npm run-script build"
   },
   "author": "Douglas von Kohorn",
   "license": "MIT",

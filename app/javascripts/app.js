@@ -45,25 +45,18 @@ if(localStorage.getItem('auctions').length === 0){
 	localStorage.setObj('auctions', []);
 }
 
-class AuctionBox extends React.Component {
-	constructor(props) {
-	  super(props);
-	  this.parent = document.getElementById('root');
+class AuctionBoundry extends React.Component {
+
+	constructor(props){
+		super(props);
 	}
-  
-	componentDidMount() {
-	  parent.appendChild(this.props.auctions);
-	}
-  
-	componentWillUnmount() {
-	  parent.removeChild(this.props.auctions);
-	}
-  
+
 	render() {
-	  return ReactDOM.createPortal(
-		this.props.children,
-		this.parent,
-	  );
+	  return (
+		 <div className="col-6 col-sm-6 col-md-4 col-lg-3">
+		  {this.props.children}
+		 </div>
+	  )
 	}
   }
 
@@ -195,6 +188,103 @@ class AuctionForm extends React.Component {
     }
 }
 
+
+class WithdrawBidsForm extends React.Component {
+	constructor(props){
+		super(props);
+	}
+
+	render() {
+		return (
+			<form className="form-inline">
+			<label className="sr-only" htmlFor="inlineFormInput">Address (Optional)</label>
+  				<input type="text" className="form-control mb-2 mr-sm-2 mb-sm-0" id="inlineFormInput" placeholder="Ethereum Address (Optional)"/>
+
+  				<label className="sr-only" htmlFor="inlineFormInputGroup">Secret</label>
+  				<div className="input-group-prepend mb-2 mr-sm-2 mb-sm-0">
+    				<span  className="input-group-text" id="basic-addon1">@</span>
+    				<input type="text" className="form-control" id="inlineFormInputGroup" aria-describedby="basic-addon1" placeholder="Secret"/>
+  				</div>
+
+  				<button type="submit" className="btn btn-primary">Withdraw Bids</button>
+			</form>
+		)
+	}
+}
+
+class WithdrawWinnerBid extends React.Component {
+
+	constructor(pros){
+		super(props);
+	}
+
+	render(){
+		return (
+			<form className="form-inline">
+		<label className="sr-only" htmlFor="inlineFormInputGroup">Secret</label>
+		<div className="input-group-prepend mb-2 mr-sm-2 mb-sm-0">
+		  <span  className="input-group-text" id="basic-addon1">@</span>
+		  <input type="text" className="form-control" id="inlineFormInputGroup" aria-describedby="basic-addon1" placeholder="Secret"/>
+		</div>
+
+		<button type="submit" className="btn btn-primary">Withdraw Winner's Bet</button>
+		</form>
+		)
+	}
+}
+
+
+class Placeholder extends React.Component {
+
+	constructor(props){
+		super(props);
+	}
+
+	render() {
+	  return (
+		 <div className="container-fluid">
+		  {this.props.children}
+		 </div>
+	  )
+	}
+  }
+
+
+class DetailsModalForm extends React.Component {
+
+	constructor(props){
+		super(props);
+	}
+
+	render(){
+		return (
+			<Placeholder>
+			<form className="form-inline">
+  				<label className="sr-only" htmlFor="inlineFormInput">Address</label>
+  				<input type="text" className="form-control mb-2 mr-sm-2 mb-sm-0" id="inlineFormInput" placeholder="Ethereum Address"/>
+
+  				<label className="sr-only" htmlFor="inlineFormInputGroup">Secret</label>
+  				<div className="input-group-prepend mb-2 mr-sm-2 mb-sm-0">
+    				<span  className="input-group-text" id="basic-addon1">@</span>
+    				<input type="text" className="form-control" id="inlineFormInputGroup" aria-describedby="basic-addon1" placeholder="Secret"/>
+  				</div>
+
+  				<div className="form-check mb-2 mr-sm-2 mb-sm-0">
+    				<label className="form-check-label">
+      					<input className="form-check-input" type="checkbox"/> I AGREE with the terms
+    				</label>
+  				</div>
+
+  				<button type="submit" className="btn btn-primary">Authorize</button>
+			</form>
+			<WithdrawBidsForm />
+			<WithdrawWinnerBid />
+			</Placeholder>
+		)
+	}
+
+}
+
 class AuctionItem extends React.Component {
 
     constructor(props){
@@ -207,7 +297,10 @@ class AuctionItem extends React.Component {
 			itemName: "",
 			startPrice: -1,
 			description: "",
-			thumbnailURL: ""
+			thumbnailURL: "",
+			hours: 0,
+			minutes: 0,
+			seconds: 0
 		}
 
 		this.instance = props.contractInstance;
@@ -219,19 +312,166 @@ class AuctionItem extends React.Component {
 			this.instance.getItemName.call(),
 			this.instance.getPrice.call(),
 			this.instance.getDescription.call(),
-			this.instance.getThumbnailURL.call()
+			this.instance.getThumbnailURL.call(),
+			this.instance.getRemainingTime.call()
 		]).then((response) => {
 			let itemName = response[0];
 			let startPrice = response[1];
 			let description = response[2];
 			let thumbnailURL = response[3];
+			let totalSeconds = response[4];
 			this.setState({
-				itemName: itemName,
-				 startPrice: web3.fromWei(startPrice.toNumber(), "ether" ),
-				  description: description,
-				   thumbnailURL: thumbnailURL
+				itemName: itemName.length > 27 ? itemName.substring(0,25) + "..." : itemName,
+				startPrice: parseFloat(web3.fromWei(startPrice.toNumber(), "ether" )).toFixed(3) + " ETH",
+				description: description.length > 27 ? description.substring(0,25) + "..." : description,
+				thumbnailURL: thumbnailURL,
+				totalSeconds: totalSeconds.toNumber()
 			});
+			this.createCountdown();
 		});
+	}
+
+	createCountdown(){
+
+	var totalSeconds = this.state.totalSeconds;
+	var totalSecs = this.state.totalSeconds;
+	var hours =  Math.floor(totalSecs / 3600);
+	totalSecs %= 3600;
+	var minutes = Math.floor(totalSecs / 60);
+	var seconds = totalSecs % 60;
+
+	var id = '#' + this.instance.address;
+
+	var Countdown = {
+  
+	// Backbone-like structure
+	$el: $(id),
+	
+	// Params
+	countdown_interval: null,
+	total_seconds     : totalSeconds,
+
+	// Initialize the countdown  
+	init: function() {
+	  
+	  this.$ = {
+		  hours  : this.$el.find('.bloc-time.hours .figure'),
+		  minutes: this.$el.find('.bloc-time.min .figure'),
+		  seconds: this.$el.find('.bloc-time.sec .figure')
+	  };
+  
+	  this.values = {
+		  hours: hours ,
+		  minutes: minutes,
+		  seconds: seconds,
+	  };
+
+	  this.count();    
+	},
+	
+	count: function() {
+	  
+	  var that    = this,
+		  $hour_1 = this.$.hours.eq(0),
+		  $hour_2 = this.$.hours.eq(1),
+		  $min_1  = this.$.minutes.eq(0),
+		  $min_2  = this.$.minutes.eq(1),
+		  $sec_1  = this.$.seconds.eq(0),
+		  $sec_2  = this.$.seconds.eq(1);
+	  
+		  this.countdown_interval = setInterval(function() {
+  
+		  if(that.total_seconds > 0) {
+  
+			  --that.values.seconds;              
+  
+			  if(that.values.minutes >= 0 && that.values.seconds < 0) {
+  
+				  that.values.seconds = 59;
+				  --that.values.minutes;
+			  }
+  
+			  if(that.values.hours >= 0 && that.values.minutes < 0) {
+  
+				  that.values.minutes = 59;
+				  --that.values.hours;
+			  }
+  
+			  // Update DOM values
+			  // Hours
+			  that.checkHour(that.values.hours, $hour_1, $hour_2);
+  
+			  // Minutes
+			  that.checkHour(that.values.minutes, $min_1, $min_2);
+  
+			  // Seconds
+			  that.checkHour(that.values.seconds, $sec_1, $sec_2);
+  
+			  --that.total_seconds;
+		  }
+		  else {
+			  clearInterval(that.countdown_interval);
+		  }
+	  }, 1000);    
+	},
+	
+	animateFigure: function($el, value) {
+	  
+	   var that         = $(document),
+			   $top         = $el.find('.top'),
+		   $bottom      = $el.find('.bottom'),
+		   $back_top    = $el.find('.top-back'),
+		   $back_bottom = $el.find('.bottom-back');
+  
+	  $back_top.find('span').html(value);
+
+	  $back_bottom.find('span').html(value);
+  
+	  // Then animate
+	  TweenMax.to($top, 0.8, {
+		  rotationX           : '-180deg',
+		  transformPerspective: 300,
+			ease                : Quart.easeOut,
+		  onComplete          : function() {
+  
+			  $top.html(value);
+  
+			  $bottom.html(value);
+  
+			  TweenMax.set($top, { rotationX: 0 });
+		  }
+	  });
+  
+	  TweenMax.to($back_top, 0.8, { 
+		  rotationX           : 0,
+		  transformPerspective: 300,
+			ease                : Quart.easeOut, 
+		  clearProps          : 'all' 
+	  });    
+	},
+	
+	checkHour: function(value, $el_1, $el_2) {
+	  
+	  var val_1       = value.toString().charAt(0),
+		  val_2       = value.toString().charAt(1),
+		  fig_1_value = $el_1.find('.top').html(),
+		  fig_2_value = $el_2.find('.top').html();
+  
+	  if(value >= 10) {
+  
+		  // Animate only if the figure has changed
+		  if(fig_1_value !== val_1) this.animateFigure($el_1, val_1);
+		  if(fig_2_value !== val_2) this.animateFigure($el_2, val_2);
+	  }
+	  else {
+  
+		  // If we are under 10, replace first figure with 0
+		  if(fig_1_value !== '0') this.animateFigure($el_1, 0);
+		  if(fig_2_value !== val_1) this.animateFigure($el_2, val_1);
+	  }    
+	}
+  };
+  	Countdown.init();
 	}
 
     render() {
@@ -242,6 +482,79 @@ class AuctionItem extends React.Component {
                     <div className="auction-display">
                         <div className="status-bar">
 
+  	<div className="countdown" id={this.instance.address}>
+    <div className="bloc-time hours" data-init-value="24">
+      <div className="figure hours hours-1">
+        <span className="top">2</span>
+        <span className="top-back">
+          <span>2</span>
+        </span>
+        <span className="bottom">2</span>
+        <span className="bottom-back">
+          <span>2</span>
+        </span>
+      </div>
+
+      <div className="figure hours hours-2">
+        <span className="top">4</span>
+        <span className="top-back">
+          <span>4</span>
+        </span>
+        <span className="bottom">4</span>
+        <span className="bottom-back">
+          <span>4</span>
+        </span>
+      </div>
+    </div>
+
+    <div className="bloc-time min" data-init-value="0">
+      <div className="figure min min-1">
+        <span className="top">0</span>
+        <span className="top-back">
+          <span>0</span>
+        </span>
+        <span className="bottom">0</span>
+        <span className="bottom-back">
+          <span>0</span>
+        </span>        
+      </div>
+
+      <div className="figure min min-2">
+       <span className="top">0</span>
+        <span className="top-back">
+          <span>0</span>
+        </span>
+        <span className="bottom">0</span>
+        <span className="bottom-back">
+          <span>0</span>
+        </span>
+      </div>
+    </div>
+
+    <div className="bloc-time sec" data-init-value="0">
+        <div className="figure sec sec-1">
+        <span className="top">0</span>
+        <span className="top-back">
+          <span>0</span>
+        </span>
+        <span className="bottom">0</span>
+        <span className="bottom-back">
+          <span>0</span>
+        </span>          
+      </div>
+
+      <div className="figure sec sec-2">
+        <span className="top">0</span>
+        <span className="top-back">
+          <span>0</span>
+        </span>
+        <span className="bottom">0</span>
+        <span className="bottom-back">
+          <span>0</span>
+        </span>
+      </div>
+    </div>
+  				</div>
                         </div>
                         <div className="image-wraper">
                             <img className="auction-item" src={thumbnailURL}></img>
@@ -255,7 +568,7 @@ class AuctionItem extends React.Component {
                                     <span className="description-price">{startPrice}</span>
                                 </div>
                         </div>
-                        <button className="button-bid">+ Details</button>
+                        <button className="button-bid" data-id={this.instance.address} data-toggle="modal" data-target="#detailsModal">+ Details</button>
                     </div>
         )
     }
@@ -284,8 +597,25 @@ class App extends React.Component {
 
         this.state = {
             auctions: localStorage.getObj('auctions').map(x => AuctionContract.at(x))
-        }
+		}
+		
+		this.renderAll = this.renderAll.bind(this);
+		this.renderOnlyActive = this.renderOnlyActive.bind(this);
+		this.renderInactive = this.renderInactive.bind(this);
     }
+
+
+	renderAll(){
+		
+	}
+
+	renderOnlyActive(){
+
+	}
+
+	renderInactive(){
+
+	}
 
     render() {
 
@@ -307,17 +637,17 @@ class App extends React.Component {
             <ul className="navbar-nav">
                 <li className="nav-item active">
                     <span>
-                        <a className="nav-link" href="#">All</a>
+                        <a className="nav-link" href="#" onClick={this.renderAll}>All</a>
                     </span>
                 </li>
                 <li className="nav-item">
                     <span>
-                        <a className="nav-link" href="#" data-toggle="modal" data-target="#detailsModal">Active</a>
+                        <a className="nav-link" href="#" onClick={this.renderOnlyActive}>Active</a>
                     </span>
                 </li>
                 <li className="nav-item">
                     <span>
-                        <a className="nav-link" href="#">Inactive</a>
+                        <a className="nav-link" href="#" onClick={this.renderInactive}>Inactive</a>
                     </span>
                 </li>
             </ul>
@@ -348,7 +678,11 @@ class App extends React.Component {
         <div className="container-fluid">
 
             <div className="row" id="content">
-				{auctions.map(x => <AuctionItem contractInstance={x} />)}
+				{auctions.map(x => 
+					<div className="col-6 col-sm-6 col-md-4 col-lg-3">
+					<AuctionItem contractInstance={x} />
+					</div>
+				)}
             </div>
         </div>
     </main>
@@ -373,4 +707,9 @@ ReactDOM.render(
 ReactDOM.render(
     < AuctionForm /> ,
     document.querySelector('#modal')
+)
+
+ReactDOM.render(
+	<DetailsModalForm />,
+    document.querySelector('#detailsModal #modal')
 )
