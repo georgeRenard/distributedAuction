@@ -114,15 +114,16 @@
     </div>
 
     <script>
-        $('.auction-display').on('mouseover', function () {
-            $(this).find('.button-bid').css('opacity', '1');
-            $(this).find('.button-bid').css('bottom', '0');
-        });
-
-        $('.auction-display').on('mouseout', function () {
-            $(this).find('.button-bid').css('opacity', '0');
-            $(this).find('.button-bid').css('bottom', '-52px');
-        });
+        $(document).on({
+            mouseenter: function () {
+                $(this).find('.button-bid').css('bottom', 0); //END FUNCTION
+                $(this).find('.button-bid').css('opacity', 1);
+            },
+            mouseleave: function () {
+                $(this).find('.button-bid').css('bottom', -52); //END FUNCTION
+                $(this).find('.button-bid').css('opacity', 0);
+            }
+        }, '.auction-display');
     </script>
     <script src="./build.js"></script>
 

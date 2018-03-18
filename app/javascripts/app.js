@@ -1,314 +1,118 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import Web3 from 'web3'
+import contract from 'truffle-contract';
+
+import AuctionContractCompiled from '../../build/contracts/Auction.json';
+import AuctionerContractCompiled from '../../build/contracts/Auctioner.json';
 
 import './../stylesheets/app.css';
 
-const AuctionContractABI = [
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "getThumbnailURL",
-		"outputs": [
-			{
-				"name": "",
-				"type": "string"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [],
-		"name": "terminate",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "_addr",
-				"type": "address"
-			},
-			{
-				"name": "_secret",
-				"type": "string"
-			}
-		],
-		"name": "allowBidder",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [],
-		"name": "bid",
-		"outputs": [],
-		"payable": true,
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "getDescription",
-		"outputs": [
-			{
-				"name": "",
-				"type": "string"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "span",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "MAX_TITLE_LENGTH",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint8"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [],
-		"name": "withdrawBid",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "MAX_DESCRIPTION_LENGTH",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint8"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "getPrice",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "today",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "timestamp",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "getItemName",
-		"outputs": [
-			{
-				"name": "",
-				"type": "string"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "item",
-		"outputs": [
-			{
-				"name": "itemName",
-				"type": "string"
-			},
-			{
-				"name": "description",
-				"type": "string"
-			},
-			{
-				"name": "thumbnailURL",
-				"type": "string"
-			},
-			{
-				"name": "startPrice",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"name": "_title",
-				"type": "string"
-			},
-			{
-				"name": "_description",
-				"type": "string"
-			},
-			{
-				"name": "_thumbnailURL",
-				"type": "string"
-			},
-			{
-				"name": "_startPrice",
-				"type": "uint256"
-			},
-			{
-				"name": "_timespan",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"payable": true,
-		"stateMutability": "payable",
-		"type": "fallback"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"name": "initiator",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"name": "timestamp",
-				"type": "uint256"
-			}
-		],
-		"name": "Start",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"name": "winner",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"name": "timestamp",
-				"type": "uint256"
-			}
-		],
-		"name": "End",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"name": "bidder",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "Bidding",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"name": "timestamp",
-				"type": "uint256"
-			}
-		],
-		"name": "Terminated",
-		"type": "event"
+var AuctionContract = contract(AuctionContractCompiled);
+var AuctionerContract = contract(AuctionerContractCompiled);
+
+var web3;
+if (typeof web3 != 'undefined') {
+	console.log("Using web3 detected from external source like Metamask")
+    web3 = new Web3(web3.currentProvider)
+} else {
+	web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"))
+}
+
+var LocalWeb3Provider = web3.currentProvider;
+
+AuctionerContract.setProvider(LocalWeb3Provider);
+AuctionContract.setProvider(LocalWeb3Provider);
+
+var DeployedAuctioner;
+
+AuctionerContract
+	.deployed({from: "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"})
+	.then(function(deploy) {
+	DeployedAuctioner = deploy;
+});
+
+AuctionContract.defaults({ gas: 4712388, gasPrice: 1000000000 });
+
+Storage.prototype.setObj = function(key, obj) {
+    return this.setItem(key, JSON.stringify(obj))
+}
+Storage.prototype.getObj = function(key) {
+    return JSON.parse(this.getItem(key))
+}
+
+if(localStorage.getItem('auctions').length === 0){
+	localStorage.setObj('auctions', []);
+}
+
+class AuctionBox extends React.Component {
+	constructor(props) {
+	  super(props);
+	  this.parent = document.getElementById('root');
 	}
-]
+  
+	componentDidMount() {
+	  parent.appendChild(this.props.auctions);
+	}
+  
+	componentWillUnmount() {
+	  parent.removeChild(this.props.auctions);
+	}
+  
+	render() {
+	  return ReactDOM.createPortal(
+		this.props.children,
+		this.parent,
+	  );
+	}
+  }
 
 class AuctionForm extends React.Component {
     
     constructor(){
         super();
-        this.auction = {};
+		this.auction = {};
+		this.handleSubmit = this.handleSubmit.bind(this);
+		this.handleURLChange = this.handleURLChange.bind(this);
+		this.handleDescriptionChange = this.handleDescriptionChange.bind(this);
+		this.handleItemNameChange = this.handleItemNameChange.bind(this);
+		this.handlePriceChange = this.handlePriceChange.bind(this);
+		this.handleCommisionPlanChange = this.handleCommisionPlanChange.bind(this);
     }
 
     handleSubmit(event){
 
+		event.preventDefault();
+		if(this.auction.url &&
+			this.auction.description.length > 0 &&
+			this.auction.description.length <= 1024 &&
+			this.auction.itemName &&
+			this.auction.span &&
+			this.auction.startPrice){
 
+
+			AuctionContract.new(
+				DeployedAuctioner.address,
+				this.auction.itemName,
+				this.auction.description,
+				this.auction.url,
+				this.auction.startPrice,
+				this.auction.span
+			,{
+				value: this.auction.startPrice + 100,
+				from: web3.eth.accounts[0]
+			}
+			).then( (instance) => {
+				var div = document.createElement('div');
+				div.className = "col-6 col-sm-6 col-md-4 col-lg-3";
+				content.appendChild(div);
+				var auctions = localStorage.getObj('auctions')
+				auctions.push(instance.address);
+				localStorage.setObj('auctions', auctions);
+				ReactDOM.render(<AuctionItem contractInstance={instance}/>, div);
+			})
+
+		}
 
     }
 
@@ -332,7 +136,15 @@ class AuctionForm extends React.Component {
         if(price) {
             this.auction.startPrice = price;
         }
-    }
+	}
+	
+	handleCommisionPlanChange(event){
+		let comissionPlan = parseInt(event.target.value);
+		if(comissionPlan){
+			this.auction.span = comissionPlan;
+		}
+	}
+
 
     render() {
         return (
@@ -347,11 +159,11 @@ class AuctionForm extends React.Component {
                             <input type="text" className="form-control" id="thumbnailURL" onChange={this.handleURLChange} placeholder="URL"/>
                         </div>
                         <div className="form-group">
-                            <label htmlFor="price">Starting Price (ether)</label>
+                            <label htmlFor="price">Starting Price [wei] (has to be bigger than 1000 szabo)</label>
                             <input type="number" className="form-control" id="price" onChange={this.handlePriceChange}/>
                         </div>
                         <div className="form-group">
-                            <label htmlFor="description">Description (255 characters)</label>
+                            <label htmlFor="description">Description (1024 characters)</label>
                             <textarea className="form-control" id="description" rows="3" onChange={this.handleDescriptionChange}></textarea>
                         </div>
                         <fieldset className="form-group">
@@ -374,7 +186,7 @@ class AuctionForm extends React.Component {
                         </fieldset>
                         <div className="form-check">
                             <label className="form-check-label">
-                                <input type="checkbox" className="form-check-input"/> I Agree that upon termination i will get charged a flat rate of 0.01 ether
+                                <input type="checkbox" className="form-check-input"/> I Agree that upon termination i will get charged a flat rate of 0.001 ether
                             </label>
                         </div>
                         <button type="submit" id="submitAuction" className="btn btn-primary">Submit</button>
@@ -385,97 +197,100 @@ class AuctionForm extends React.Component {
 
 class AuctionItem extends React.Component {
 
-    constructor(contractInstance){
-        super();
-        this.instance = contractInstance;
+    constructor(props){
+		super(props);
+		if(!props.contractInstance){
+			return;
+		}
+
+		this.state = {
+			itemName: "",
+			startPrice: -1,
+			description: "",
+			thumbnailURL: ""
+		}
+
+		this.instance = props.contractInstance;
     }
 
+	componentDidMount(){
+
+		Promise.all([
+			this.instance.getItemName.call(),
+			this.instance.getPrice.call(),
+			this.instance.getDescription.call(),
+			this.instance.getThumbnailURL.call()
+		]).then((response) => {
+			let itemName = response[0];
+			let startPrice = response[1];
+			let description = response[2];
+			let thumbnailURL = response[3];
+			this.setState({
+				itemName: itemName,
+				 startPrice: web3.fromWei(startPrice.toNumber(), "ether" ),
+				  description: description,
+				   thumbnailURL: thumbnailURL
+			});
+		});
+	}
+
     render() {
+
+		const { itemName, startPrice, description, thumbnailURL } = this.state;
+		console.log(this.state);
         return (
-            <div className="col-6 col-sm-6 col-md-4 col-lg-3">
                     <div className="auction-display">
                         <div className="status-bar">
 
                         </div>
                         <div className="image-wraper">
-                            <img className="auction-item" src={this.getThumbnailURL()}></img>
+                            <img className="auction-item" src={thumbnailURL}></img>
                         </div>
                         <div className="description">
-                            <h3 className="description-title">{this.getItemName}</h3>
+                            <h3 className="description-title">{itemName}</h3>
                                 <a className="description-desc">
-                                    {this.getDescription}
+                                    {description}
                                 </a>
                                 <div>
-                                    <span className="description-price">{this.getPrice}</span>
+                                    <span className="description-price">{startPrice}</span>
                                 </div>
                         </div>
                         <button className="button-bid">+ Details</button>
                     </div>
-                </div>
         )
     }
 
     getItemName(){
-        
-        this.instance.getItemName().then((err,res) => {
-            if(err || !res){
-                return "Error";
-            }
-            return res;
-        });
-
+       return this.itemName;
     }
 
     getPrice(){
-
-        this.instance.getItemPrice().then((err,res) => {
-            if(err || !res){
-                return "Price error";
-            }
-
-            return parseInt(res);
-        });
+		return this.startPrice;
     }
 
     getDescription(){
-
-        this.instance.getDescription().then((err,res) => {
-            if(err || !res){
-                return "Price error";
-            }
-
-            return res;
-        });
+		return this.description;
     }
 
     getThumbnailURL(){
-        this.instance.getThumbnailURL().then((err,res) => {
-            if(err || !res){
-                return "Error";
-            }
-
-            return res;
-        })
+       return this.thumbnailURL;
     }
 
 }
 
 class App extends React.Component {
-    constructor(auctionContract) {
-        super();
-        this.state = {
-            auctions: auctionContract || []
-        }
+    constructor(props) {
+		super();
 
-        if (typeof web3 != 'undefined') {
-            console.log("Using web3 detected from external source like Metamask")
-            this.web3 = new Web3(web3.currentProvider)
-        } else {
-            this.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"))
+        this.state = {
+            auctions: localStorage.getObj('auctions').map(x => AuctionContract.at(x))
         }
     }
 
     render() {
+
+		const auctions = this.state.auctions;
+
         return ( 
             <div>
             <header>
@@ -532,12 +347,10 @@ class App extends React.Component {
 
         <div className="container-fluid">
 
-            <div className="row">
-
-                {this.populateAuctions()}
-                                
+            <div className="row" id="content">
+				{auctions.map(x => <AuctionItem contractInstance={x} />)}
             </div>
-            </div>
+        </div>
     </main>
     <footer>
     <div className="container footer">
@@ -551,20 +364,9 @@ class App extends React.Component {
         )
     }
 
-    handleSubmit(e) {
-        e.preventDefault();
-
-    }
-
-    populateAuctions(){
-        //for(var instance in this.state.auctions){
-        //    new AuctionItem(instance).render();
-        //}
-    }
-
 }
-ReactDOM.render( <
-    App / > ,
+ReactDOM.render( 
+	<App  /> ,
     document.querySelector('#root')
 )
 

@@ -219,6 +219,10 @@ contract Auction is TimeLocked, HashLocked {
         return item.startPrice;
     }
 
+    function getHighestBid() public view returns (uint256) {
+        return maximumBid;
+    }
+
     function getThumbnailURL() public view returns (string) {
         return item.thumbnailURL;
     }

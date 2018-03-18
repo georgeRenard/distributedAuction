@@ -22,7 +22,7 @@ module.exports = {
     loaders: [{
       test: /\.css$/, // To load the css in react
       use: ['style-loader', 'css-loader'],
-      exclude: /node_modules/,
+      exclude: /node_modules, contracts/, 
       include: /app/
    }, {
       test: /\.jsx?$/, // To load the js and jsx files
