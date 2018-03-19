@@ -17,7 +17,7 @@ contract Auctioner {
 
     event PayedComission(address, uint256);
 
-    address private owner;
+    address public owner;
 
     function Auctioner() public {
         owner = msg.sender;
@@ -27,7 +27,7 @@ contract Auctioner {
         PayedComission(msg.sender, now);
     }
 
-    function withdrawComission() public ownerOnly {
+    function withdrawComissions() public ownerOnly {
         require(this.balance > 0);
         owner.transfer(this.balance);
     }

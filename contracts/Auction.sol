@@ -22,26 +22,40 @@ contract Auction is TimeLocked, HashLocked {
     /// The auction starts 
     event Start(address initiator, uint256 timestamp, uint256 span);
     event End(address winner, uint256 timestamp);
+    event SelfdestructCountdown(uint256 timestamp);
     event Bidding(address bidder, uint256 amount);
     event BidderAuthorized(address bidder, uint256 timestamp);
     // The auction can be terminated and as such has to notify
     event Terminated(uint256 timestamp);
 
+    /// Only the owner is eligible to use the functions
     modifier ownerOnly() {
-        if (msg.sender != owner) {
-            return;
-        }
+        require(msg.sender == owner);
         _;
     }
 
+    /// Allows only authorized bidders to access the function
     modifier authorizedBidderOnly(string _secret) {
-        require(bidders[msg.sender]);
         require(sha256(_secret) == secrets[msg.sender]);
+        assert(bidders[msg.sender]);
         _;
     }
-
+    
+    /// Checks whether the auction is not terminated
     modifier ifActive() {
         assert(!terminated);
+        _;
+    }
+
+    /// This modifier checks if the auction was eihter terminated or has finished
+    /// If it was terminated/has ended it should selfdestruct after a period of 7 days
+    /// This 7 days period is given to the bidders as a time limit to withdraw their bids (not the winner)
+    modifier selfdestructCountdown() {
+        if (finished || terminated) {
+            if (selfdestructStart + 7 days <= now) {
+                selfdestruct(auctioner);
+            }
+        }
         _;
     }
 
@@ -51,6 +65,8 @@ contract Auction is TimeLocked, HashLocked {
     uint8 public constant MAX_TITLE_LENGTH = 50;
     /// The default flat comission charged on termination (around 0.001 ether or 0.6 USD A.T.M)
     uint256 private constant DEFAULT_FLAT_COMISSION = 1000 szabo;
+    /// The minimum length of the secret you must provide (8 characters)
+    uint8 public constant MINIMUM_SECRET_LENGTH = 8;
 
     /// Authorized bidders
     mapping ( address => bool ) private bidders;
@@ -83,8 +99,14 @@ contract Auction is TimeLocked, HashLocked {
     /// The actual span in days
     uint8 private spanInDays;
 
+    /// Initial deposit
+    uint256 private initialDeposit;
+
     /// The time of creation
     uint256 public timestamp;
+
+    /// Selfdestruct start
+    uint256 public selfdestructStart;
 
     /// Is the contract terminated
     bool private terminated = false;
@@ -142,6 +164,7 @@ contract Auction is TimeLocked, HashLocked {
         span = _timespan * 24 * 3600;
         /// The conversion is safe because there is an assertion that ensures it above
         spanInDays = uint8(_timespan);
+        initialDeposit = msg.value;
     }
 
     /// If everything else fails (fallback)
@@ -155,6 +178,7 @@ contract Auction is TimeLocked, HashLocked {
         public 
         payable
         ifActive
+        selfdestructCountdown()
     {
 
         require(msg.value > 0);
@@ -182,13 +206,18 @@ contract Auction is TimeLocked, HashLocked {
     /// At the end of the termination period all funds go to the owner
     function terminate() 
         public 
-        ownerOnly 
+        ownerOnly
     {  
 
+        assert(!finished);
         assert(!terminated);
+
         Terminated(now);
+        SelfdestructCountdown(now);
 
         terminated = true;
+        selfdestructStart = now;
+
         if (this.balance < DEFAULT_FLAT_COMISSION) {
             selfdestruct(auctioner);
         } else {
@@ -196,10 +225,13 @@ contract Auction is TimeLocked, HashLocked {
         }
     }
 
-    function allowBidder(address _addr, string _secret) public ifActive {
+    function allowBidder(address _addr, string _secret) public ifActive selfdestructCountdown() {
         require(msg.sender == _addr);
-        require(!bidders[_addr]);
+        require(_addr != owner);
+        require(bytes(_secret).length >= MINIMUM_SECRET_LENGTH);
+
         assert(!finished);
+        assert(!bidders[_addr]);
         
         BidderAuthorized(_addr, now);
 
@@ -208,28 +240,53 @@ contract Auction is TimeLocked, HashLocked {
         bids[_addr] = 0;
     }
 
-    function withdrawBid(string _secret) public authorizedBidderOnly(_secret) {
+    function withdrawBid(string _secret) public authorizedBidderOnly(_secret) selfdestructCountdown() {
+        require(msg.sender != owner);
         require(msg.sender != currentMaxBidderAddress);
         require(bids[msg.sender] > 0);
+        
+        assert(this.balance >= amountToSend);
+
         uint256 amountToSend = bids[msg.sender];
         bids[msg.sender] = 0;
-        assert(this.balance >= amountToSend);
-        assert(bids[msg.sender] == 0);
         msg.sender.transfer(amountToSend);
     }
 
     /// Withdrawing the winning bid using the users secret
-    function withdrawWinningBid(string _secret) public ownerOnly ifActive {
+    function withdrawWinningBid(string _secret) public ownerOnly ifActive selfdestructCountdown() {
 
-        require(hasEnded());
+        require(bytes(_secret).length >= MINIMUM_SECRET_LENGTH);
         require(maximumBid > item.startPrice);
         require(sha256(_secret) == secrets[currentMaxBidderAddress]);
-        require(this.balance > maximumBid);
+        require(this.balance > maximumBid + item.startPrice);
+        require(bids[currentMaxBidderAddress] - maximumBid >= 0);
+
+        assert(hasEnded());
 
         End(currentMaxBidderAddress, now);
-    
-        /// Make transfers
 
+        // Pay comission
+        uint256 comission = DEFAULT_FLAT_COMISSION;
+        if (spanInDays == 7) {
+            comission = (15 * maximumBid) / 100;
+        }else if (spanInDays == 3) {
+            comission = (10 * maximumBid) / 100;
+        }
+
+        auctioner.transfer(comission);
+        maximumBid -= comission;
+
+        /// Make transfers
+        bids[currentMaxBidderAddress] -= maximumBid;
+        owner.transfer(maximumBid + initialDeposit);
+    }
+
+    function forceEnding() public ownerOnly {
+        span = 1;
+    }
+
+    function isInactive() public view returns (bool) {
+        return terminated || finished;
     }
 
     function getMaxBidderAddress() public view ownerOnly returns(address) {
@@ -241,9 +298,11 @@ contract Auction is TimeLocked, HashLocked {
     }
 
     function getRemainingTime() public view ifActive returns (uint256) {
+
         assert(!hasEnded());
         uint256 remainingTime = span - (now - timestamp);
         return remainingTime;
+
     }
 
     function isAuthorizedBidder(address _addr) public view returns(bool) {
@@ -254,8 +313,18 @@ contract Auction is TimeLocked, HashLocked {
         return span;
     }
 
-    function hasEnded() public view returns (bool) {
-        return timestamp + span <= now;
+    function hasEnded() public returns (bool) {
+        bool ended = timestamp + span <= now;
+
+        if (ended) {
+
+            SelfdestructCountdown(now);
+            finished = true;
+            selfdestructStart = now;
+
+        }
+
+        return ended;
     }
 
     function isTerminated() public view returns (bool) {

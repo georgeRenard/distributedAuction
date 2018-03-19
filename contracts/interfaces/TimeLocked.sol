@@ -12,7 +12,7 @@ contract TimeLocked {
     
     function getRemainingTime() public view returns (uint256);
     function getLifespan() public view returns (uint256);
-    function hasEnded() public view returns (bool);
+    function hasEnded() public returns (bool);
     function isTerminated() public view returns (bool);
 
 }

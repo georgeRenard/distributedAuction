@@ -16,7 +16,7 @@ if (typeof web3 != 'undefined') {
 	console.log("Using web3 detected from external source like Metamask")
     web3 = new Web3(web3.currentProvider)
 } else {
-	web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"))
+	web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"))
 }
 
 var LocalWeb3Provider = web3.currentProvider;
@@ -26,11 +26,18 @@ AuctionContract.setProvider(LocalWeb3Provider);
 
 var DeployedAuctioner;
 
-AuctionerContract
-	.deployed({from: "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"})
-	.then(function(deploy) {
-	DeployedAuctioner = deploy;
-});
+if(!localStorage.getItem('auctioner')) localStorage.setItem('auctioner', '');
+
+if(localStorage.getItem('auctioner').length == 0){
+	AuctionerContract
+		.deployed({from: "0x7e116aaf6bcc45118dca2675cf59137dc212ee5e"})
+		.then(function(deploy) {
+		DeployedAuctioner = deploy;
+		localStorage.setItem('auctioner', DeployedAuctioner.address);
+	});
+}else{
+	AuctionerContract.at(localStorage.auctioner).then((instance) => DeployedAuctioner = instance);
+}
 
 AuctionContract.defaults({ gas: 4712388, gasPrice: 1000000000 });
 
@@ -45,20 +52,6 @@ if(localStorage.getItem('auctions').length === 0){
 	localStorage.setObj('auctions', []);
 }
 
-class AuctionBoundry extends React.Component {
-
-	constructor(props){
-		super(props);
-	}
-
-	render() {
-	  return (
-		 <div className="col-6 col-sm-6 col-md-4 col-lg-3">
-		  {this.props.children}
-		 </div>
-	  )
-	}
-  }
 
 class AuctionForm extends React.Component {
     
@@ -188,85 +181,27 @@ class AuctionForm extends React.Component {
     }
 }
 
-
-class WithdrawBidsForm extends React.Component {
+class AuthorizeBidderForm extends React.Component {
 	constructor(props){
-		super(props);
+		super();
+
+		this.secret = "";
+		this.address = web3.eth.accounts[0];
+		this.handleAddressChange = this.handleAddressChange.bind(this);
+		this.handleSecretChange = this.handleSecretChange.bind(this);
+		this.authorizeBidder = this.authorizeBidder.bind(this);
 	}
 
 	render() {
 		return (
-			<form className="form-inline">
-			<label className="sr-only" htmlFor="inlineFormInput">Address (Optional)</label>
-  				<input type="text" className="form-control mb-2 mr-sm-2 mb-sm-0" id="inlineFormInput" placeholder="Ethereum Address (Optional)"/>
-
-  				<label className="sr-only" htmlFor="inlineFormInputGroup">Secret</label>
-  				<div className="input-group-prepend mb-2 mr-sm-2 mb-sm-0">
-    				<span  className="input-group-text" id="basic-addon1">@</span>
-    				<input type="text" className="form-control" id="inlineFormInputGroup" aria-describedby="basic-addon1" placeholder="Secret"/>
-  				</div>
-
-  				<button type="submit" className="btn btn-primary">Withdraw Bids</button>
-			</form>
-		)
-	}
-}
-
-class WithdrawWinnerBid extends React.Component {
-
-	constructor(pros){
-		super(props);
-	}
-
-	render(){
-		return (
-			<form className="form-inline">
-		<label className="sr-only" htmlFor="inlineFormInputGroup">Secret</label>
-		<div className="input-group-prepend mb-2 mr-sm-2 mb-sm-0">
-		  <span  className="input-group-text" id="basic-addon1">@</span>
-		  <input type="text" className="form-control" id="inlineFormInputGroup" aria-describedby="basic-addon1" placeholder="Secret"/>
-		</div>
-
-		<button type="submit" className="btn btn-primary">Withdraw Winner's Bet</button>
-		</form>
-		)
-	}
-}
-
-
-class Placeholder extends React.Component {
-
-	constructor(props){
-		super(props);
-	}
-
-	render() {
-	  return (
-		 <div className="container-fluid">
-		  {this.props.children}
-		 </div>
-	  )
-	}
-  }
-
-
-class DetailsModalForm extends React.Component {
-
-	constructor(props){
-		super(props);
-	}
-
-	render(){
-		return (
-			<Placeholder>
 			<form className="form-inline">
   				<label className="sr-only" htmlFor="inlineFormInput">Address</label>
-  				<input type="text" className="form-control mb-2 mr-sm-2 mb-sm-0" id="inlineFormInput" placeholder="Ethereum Address"/>
+  				<input type="text" onChange={this.handleAddressChange} className="form-control mb-2 mr-sm-2 mb-sm-0" id="inlineFormInput" placeholder="Ethereum Address"/>
 
   				<label className="sr-only" htmlFor="inlineFormInputGroup">Secret</label>
   				<div className="input-group-prepend mb-2 mr-sm-2 mb-sm-0">
     				<span  className="input-group-text" id="basic-addon1">@</span>
-    				<input type="text" className="form-control" id="inlineFormInputGroup" aria-describedby="basic-addon1" placeholder="Secret"/>
+    				<input type="text" onChange={this.handleSecretChange} className="form-control" id="inlineFormInputGroup" aria-describedby="basic-addon1" placeholder="Secret"/>
   				</div>
 
   				<div className="form-check mb-2 mr-sm-2 mb-sm-0">
@@ -275,11 +210,275 @@ class DetailsModalForm extends React.Component {
     				</label>
   				</div>
 
-  				<button type="submit" className="btn btn-primary">Authorize</button>
+  				<button type="submit" onClick={this.authorizeBidder} className="btn btn-primary">Authorize</button>
 			</form>
-			<WithdrawBidsForm />
-			<WithdrawWinnerBid />
-			</Placeholder>
+		)
+	}
+	
+	handleSecretChange(event){
+		this.secret = event.target.value;
+	}
+
+	handleAddressChange(event){
+		this.address = event.target.value;
+		if(this.address.length == 0){
+			this.address = web3.eth.accounts[0];
+		}	
+	}
+
+	authorizeBidder(event){
+		event.preventDefault()
+		var address = $('#detailsModal').attr('data-contract-addr');
+		var self = this;
+
+		AuctionContract.at(address).then((contract) => {
+			contract.allowBidder.call(self.address, self.secret ,{from: self.address}).then(() => {
+			//show success notification
+				self.showSuccess('You were successfully authorized to place bids. Congratulations!');
+
+				}).catch((err) => {
+					self.showError("Something went wrong. Check if the auction was not terminated.");
+				});
+
+		}).catch(() => {
+			self.showError("The contract you tried to access is INVALID.");
+		});
+	}
+
+	showSuccess(msg){
+		$('#success').css('display', 'block');
+		$('#success').find('span#alert-text').text(msg);
+	}
+
+	showError(msg){
+		$('#error').css('display', 'block');
+		$('#error').find('span#alert-text').text(msg);
+	}
+
+}
+
+class WithdrawBidsForm extends React.Component {
+	constructor(props){
+		super();
+
+		this.secret = "";
+		this.address = web3.eth.accounts[0];
+		this.handleAddressChange = this.handleAddressChange.bind(this);
+		this.handleSecretChange = this.handleSecretChange.bind(this);
+		this.withdrawBid = this.withdrawBid.bind(this);
+	}
+
+	render() {
+		return (
+			<form className="form-inline">
+			<label className="sr-only" htmlFor="inlineFormInput">Address (Optional)</label>
+  				<input type="text" onChange={this.handleAddressChange} className="form-control mb-2 mr-sm-2 mb-sm-0" id="inlineFormInput" placeholder="Ethereum Address (Optional)"/>
+
+  				<label className="sr-only" htmlFor="inlineFormInputGroup">Secret</label>
+  				<div className="input-group-prepend mb-2 mr-sm-2 mb-sm-0">
+    				<span  className="input-group-text" id="basic-addon1">@</span>
+    				<input type="text" onChange={this.handleSecretChange} className="form-control" id="inlineFormInputGroup" aria-describedby="basic-addon1" placeholder="Secret"/>
+  				</div>
+
+  				<button type="submit" onClick={this.withdrawBid} className="btn btn-primary">Withdraw Bids</button>
+			</form>
+		)
+	}
+
+	handleSecretChange(event){
+		this.secret = event.target.value;
+	}
+
+	handleAddressChange(event){
+		this.address = event.target.value;
+		if(this.address.length == 0){
+			this.address = web3.eth.accounts[0];
+		}	
+	}
+
+	withdrawBid(event){
+		event.preventDefault();
+		var address = $('#detailsModal').attr('data-contract-addr');
+		var self = this;
+
+		AuctionContract.at(address).then((contract) => {
+
+			contract.withdrawBid.call(self.secret ,{from: self.address}).then(() => {
+				//show success notification
+				self.showSuccess('You successfully withdrawed your bid. Congratulations!');
+
+			}).catch((err) => {
+				self.showError("Please, make sure you are an authorized bidder with any bids.");
+			});
+
+		}).catch((err) => {
+			self.showError("The contract you tried to access is INVALID.");
+		});
+	}
+
+	showSuccess(msg){
+		$('#success').css('display', 'block');
+		$('#success').find('span#alert-text').text(msg);
+	}
+
+	showError(msg){
+		$('#error').css('display', 'block');
+		$('#error').find('span#alert-text').text(msg);
+	}
+}
+
+class WithdrawWinnerBid extends React.Component {
+
+	constructor(props){
+		super();
+
+		this.secret = "";
+
+		this.handleSecretChange = this.handleSecretChange.bind(this);
+		this.withdrawBid = this.withdrawBid.bind(this);
+		this.makeBid = this.makeBid.bind(this);
+	}
+
+	render(){
+		return (
+			<form className="form-inline">
+		<label className="sr-only" htmlFor="inlineFormInputGroup">Secret</label>
+		<div className="input-group-prepend mb-2 mr-sm-2 mb-sm-0">
+		  <span  className="input-group-text" id="basic-addon1">@</span>
+		  <input type="text" className="form-control" id="inlineFormInputGroup" 
+		  		onChange={this.handleSecretChange} aria-describedby="basic-addon1" placeholder="Secret"/>
+		</div>
+
+		<button type="submit" className="btn btn-primary" onClick={this.withdrawBid}>Withdraw Winner's Bid</button>
+		<button type="submit" style={{marginLeft: "8px"}} className="btn btn-primary" onClick={this.makeBid}>Make Bid</button>
+		<button type="submit" style={{marginLeft: "8px"}} className="btn btn-primary" onClick={this.showDialog}>Terminate</button>
+
+		<div className="modal" tabIndex="-1" role="dialog" id="terminate-dialog" style={{display: "none"}}>
+  			<div className="modal-dialog" role="document">
+    			<div className="modal-content">
+      				<div className="modal-header">
+        				<h5 className="modal-title">Terminate Auction</h5>
+        				<button type="button" className="close" onClick={this.hideDialog} aria-label="Close">
+         					<span aria-hidden="true">&times;</span>
+        				</button>
+      				</div>
+      				<div className="modal-body">
+        			<p>Are you completely sure that you want to TERMINATE your auction.
+						 Keep in mind that you will be charged a FLAT comission of 0.001 ether</p>
+      				</div>
+      				<div className="modal-footer">
+        				<button type="button" className="btn btn-primary" onClick={this.terminate}>Terminate</button>
+        				<button type="button" className="btn btn-secondary" onClick={this.hideDialog}>Close</button>
+      				</div>
+    			</div>
+  			</div>
+		</div>
+
+		</form>
+		)
+	}
+
+	hideDialog(){
+		$('#terminate-dialog').css('display', 'none');
+	}
+
+	showDialog(){
+		$('#terminate-dialog').css('display', 'block');
+	}
+
+	handleSecretChange(event){
+		this.secret = event.target.value;
+	}
+
+	withdrawBid(event){
+		event.preventDefault();
+		var address = $('#detailsModal').attr('data-contract-addr');
+		var self = this;
+		AuctionContract.at(address).then((contract) => 
+		{
+			contract.withdrawWinningBid.call(self.secret ,{from: web3.eth.accounts[0]}).then(() => {
+				//show success notification
+				self.showSuccess('You successfully withdrawed the winning bid. Congratulations!');
+
+			}).catch((err) => {
+				self.showError("The auction is eihter still active or you are not authorized to do that.");
+			});
+		}).catch((err) => {
+			//Show error notification
+			self.showError("The contract you tried to access is INVALID.");
+		});
+	}
+
+	terminate(event){
+		event.preventDefault();
+		var address = $('#detailsModal').attr('data-contract-addr');
+		var self = this;
+		AuctionContract.at(address).then((contract) => {
+
+			contract.terminate.call(self.secret ,{from: web3.eth.accounts[0]}).then(() => {
+				//show success notification
+				self.showSuccess('You successfully withdrawed the winning bid. Congratulations!');
+
+			}).catch((err) => {
+				self.showError("The auction is eihter still active or you are not authorized to do that.");
+			});
+		}).catch((err) => {
+			self.showError("The contract you tried to access is INVALID.");
+		});
+
+	}
+
+	makeBid(event){
+		event.preventDefault();
+		var address = $('#detailsModal').attr('data-contract-addr');
+		var self = this;
+		AuctionContract.at(address).then((contract) => {
+
+			contract.isAuthorizedBidder.call(web3.eth.accounts[0], {from: web3.eth.accounts[0]}).then((authorized) => {
+				//show success notification
+
+				if(!authorized){
+					self.showError("You are eihter not an authorized or the auction was/has already terminated/finished.");
+					return;
+				}
+
+				self.showSuccess('You are an authorized bidder, you can proceed in a moment');
+
+				ReactDOM.render(<DetailsView contractInstance={contract}/>, document.querySelector('#content'))
+
+			}).catch((err) => {
+				self.showError("You are eihter not an authorized or the auction was/has already terminated/finished.");
+			});
+		}).catch((err) => {
+			self.showError("The contract you tried to access is INVALID.");
+		});
+	}
+
+	showSuccess(msg){
+		$('#success').css('display', 'block');
+		$('#success').find('span#alert-text').text(msg);
+	}
+
+	showError(msg){
+		$('#error').css('display', 'block');
+		$('#error').find('span#alert-text').text(msg);
+	}
+}
+
+
+class DetailsModalForm extends React.Component {
+
+	constructor(props){
+		super();
+	}
+
+	render(){
+		return (
+			<div className="container-fluid">
+				<AuthorizeBidderForm />
+				<WithdrawBidsForm />
+				<WithdrawWinnerBid />
+			</div>
 		)
 	}
 
@@ -298,6 +497,7 @@ class AuctionItem extends React.Component {
 			startPrice: -1,
 			description: "",
 			thumbnailURL: "",
+			terminated: false,
 			hours: 0,
 			minutes: 0,
 			seconds: 0
@@ -313,21 +513,26 @@ class AuctionItem extends React.Component {
 			this.instance.getPrice.call(),
 			this.instance.getDescription.call(),
 			this.instance.getThumbnailURL.call(),
-			this.instance.getRemainingTime.call()
+			this.instance.getRemainingTime.call(),
+			this.instance.isInactive.call()
 		]).then((response) => {
 			let itemName = response[0];
 			let startPrice = response[1];
 			let description = response[2];
 			let thumbnailURL = response[3];
 			let totalSeconds = response[4];
+			let terminated = response[5];
 			this.setState({
 				itemName: itemName.length > 27 ? itemName.substring(0,25) + "..." : itemName,
 				startPrice: parseFloat(web3.fromWei(startPrice.toNumber(), "ether" )).toFixed(3) + " ETH",
 				description: description.length > 27 ? description.substring(0,25) + "..." : description,
 				thumbnailURL: thumbnailURL,
-				totalSeconds: totalSeconds.toNumber()
+				totalSeconds: totalSeconds.toNumber(),
+				terminated: terminated
 			});
-			this.createCountdown();
+			if(!terminated){
+				this.createCountdown();
+			}
 		});
 	}
 
@@ -476,14 +681,12 @@ class AuctionItem extends React.Component {
 
     render() {
 
-		const { itemName, startPrice, description, thumbnailURL } = this.state;
-		console.log(this.state);
-        return (
-                    <div className="auction-display">
-                        <div className="status-bar">
-
+		const { itemName, startPrice, description, thumbnailURL, terminated } = this.state;
+		
+		const timer = !terminated ? (
+			<div className="status-bar">
   	<div className="countdown" id={this.instance.address}>
-    <div className="bloc-time hours" data-init-value="24">
+    <div className="bloc-time hours" data-init-value="0">
       <div className="figure hours hours-1">
         <span className="top">2</span>
         <span className="top-back">
@@ -555,7 +758,15 @@ class AuctionItem extends React.Component {
       </div>
     </div>
   				</div>
-                        </div>
+						</div>
+		) : (
+			<div className="status-bar">
+			</div>
+		)
+
+		return (
+                    <div className="auction-display">
+						{timer}
                         <div className="image-wraper">
                             <img className="auction-item" src={thumbnailURL}></img>
                         </div>
@@ -591,14 +802,98 @@ class AuctionItem extends React.Component {
 
 }
 
+class DetailsView extends React.Component {
+
+	constructor(props){
+		super(props);
+
+		var instance = props.contractInstance;
+		
+		this.state = {
+			itemName: "",
+			startPrice: -1,
+			description: "",
+			thumbnailURL: "",
+			terminated: false,
+			maximumBid: 0,
+			hours: 0,
+			minutes: 0,
+			seconds: 0
+		}
+
+		this.instance = props.contractInstance;
+
+	}
+
+	componentDidMount(){
+		Promise.all([
+			this.instance.getItemName.call(),
+			this.instance.getPrice.call(),
+			this.instance.getDescription.call(),
+			this.instance.getThumbnailURL.call(),
+			this.instance.getRemainingTime.call(),
+			this.instance.isInactive.call(),
+			this.instance.getMaximumBid.call()
+		]).then((response) => {
+			let itemName = response[0];
+			let startPrice = response[1];
+			let description = response[2];
+			let thumbnailURL = response[3];
+			let totalSeconds = response[4];
+			let terminated = response[5];
+			let maximumBid = response[6];
+			this.setState({
+				itemName: itemName.length > 27 ? itemName.substring(0,25) + "..." : itemName,
+				startPrice: parseFloat(web3.fromWei(startPrice.toNumber(), "ether" )).toFixed(3) + " ETH",
+				description: description.length > 27 ? description.substring(0,25) + "..." : description,
+				thumbnailURL: thumbnailURL,
+				totalSeconds: totalSeconds.toNumber(),
+				terminated: terminated,
+				maximumBid: web3.fromWei(maximumBid.toNumber(), "ether") + " ETH"
+			});
+
+			if(!terminated){
+				this.createCountdown();
+			}
+		});
+	}
+
+	render() {
+
+		const { itemName, startPrice, description, thumbnailURL, terminated, maximumBid } = this.state;
+
+		return (
+			<div className="container">
+				<div className="col-lg-6 col-md-6 col-sm-12 col-12">
+					<img src={thumbnailURL} width="640" height="640"/>
+				</div>
+				<div className="col-lg-6 col-md-6 col-sm-12 col-12">
+					<div>
+						<h2>{itemName}</h2>
+					</div>
+					<div>
+						<h5>{maximumBid}</h5>
+					</div>
+					<button className="btn btn-primary"/>Make Bid
+					<div>
+						<p>{description}</p>
+					</div>
+				</div>
+			</div>
+		)
+
+	}
+
+}
+
 class App extends React.Component {
     constructor(props) {
 		super();
 
-        this.state = {
-            auctions: localStorage.getObj('auctions').map(x => AuctionContract.at(x))
+		this.state = {
+			auctions: localStorage.getObj('auctions')
 		}
-		
+
 		this.renderAll = this.renderAll.bind(this);
 		this.renderOnlyActive = this.renderOnlyActive.bind(this);
 		this.renderInactive = this.renderInactive.bind(this);
@@ -617,9 +912,16 @@ class App extends React.Component {
 
 	}
 
+	withdrawComissions(){
+		DeployedAuctioner
+			.withdrawComissions.call({from: "0x7e116aaf6bcc45118dca2675cf59137dc212ee5e"})
+		.then(() => { console.log("You have withdrawn your comissions. $$$$ MULLAAAH $$$$") })
+		.catch((err) => console.log(err));
+	}
+
     render() {
 
-		const auctions = this.state.auctions;
+		var auctions = this.state.auctions;
 
         return ( 
             <div>
@@ -650,6 +952,11 @@ class App extends React.Component {
                         <a className="nav-link" href="#" onClick={this.renderInactive}>Inactive</a>
                     </span>
                 </li>
+				<li className="nav-item">
+					<span>
+						<a className="nav-link" href="#" onClick={this.withdrawComissions}>Withdraw Comissions</a>
+					</span>
+				</li>
             </ul>
         </div>
         <a className="navbar-brand centered" href="#">
@@ -680,7 +987,7 @@ class App extends React.Component {
             <div className="row" id="content">
 				{auctions.map(x => 
 					<div className="col-6 col-sm-6 col-md-4 col-lg-3">
-					<AuctionItem contractInstance={x} />
+						<AuctionItem contractInstance={AuctionContract.at(x)} />
 					</div>
 				)}
             </div>
