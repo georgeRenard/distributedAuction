@@ -165,6 +165,7 @@ contract Auction is TimeLocked, HashLocked {
         /// The conversion is safe because there is an assertion that ensures it above
         spanInDays = uint8(_timespan);
         initialDeposit = msg.value;
+        owner = msg.sender;
     }
 
     /// If everything else fails (fallback)
@@ -207,10 +208,10 @@ contract Auction is TimeLocked, HashLocked {
     function terminate() 
         public 
         ownerOnly
+        ifActive
     {  
 
-        assert(!finished);
-        assert(!terminated);
+        require(finished == false);
 
         Terminated(now);
         SelfdestructCountdown(now);
@@ -297,7 +298,7 @@ contract Auction is TimeLocked, HashLocked {
         return maximumBid;
     }
 
-    function getRemainingTime() public view ifActive returns (uint256) {
+    function getRemainingTime() public view returns (uint256) {
 
         assert(!hasEnded());
         uint256 remainingTime = span - (now - timestamp);

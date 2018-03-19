@@ -185,11 +185,10 @@ li span.offseted-left:hover::after {
     li a.nav-link:hover::after {
         opacity: 0;
     }
-
 }
 
-@media (min-width: 1024px){
-    .image-wraper{
+@media (min-width: 1024px) {
+    .image-wraper {
         width: 100%;
         margin-left: 10px;
     }

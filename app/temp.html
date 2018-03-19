@@ -6,14 +6,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Saira+Condensed" rel="stylesheet">
-    <link rel="stylesheet" href="./stylesheets/app.css" type="text/css">
+    <link rel="stylesheet" href="./stylesheets/temp.css" type="text/css">
 </head>
 
 <body>
 
 
     <div id="root">
-
+        
     </div>
     <div class="modal fade" id="myModal">
         <div class="modal-dialog modal-lg">
@@ -41,22 +41,24 @@
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="alert alert-warning alert-dismissible" role="alert">
-                        <button type="button" class="close" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        <strong>Warning!</strong> You have 7 days to withdraw your bids after the auction was terminated/completed
-                    </div>
+                    <button type="button" class="close" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <strong>Warning!</strong> You have 7 days to withdraw your bids after the auction was terminated/completed
+                </div>
                 <div class="alert alert-success alert-dismissible" role="alert" id="success" style="display: none">
                     <button type="button" class="close" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
-                    <strong>Success!</strong> <span id="alert-text">Still on beta stage.</span>
+                    <strong>Success!</strong>
+                    <span id="alert-text">Still on beta stage.</span>
                 </div>
                 <div class="alert alert-danger alert-dismissible" role="alert" id="error" style="display: none">
-                    <button type="button" class="close"  aria-label="Close">
+                    <button type="button" class="close" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
-                    <strong>Error!</strong> <span id="alert-text">Still on beta stage.</span>
+                    <strong>Error!</strong>
+                    <span id="alert-text">Still on beta stage.</span>
                 </div>
                 <div class="modal-body" id="modal">
 
@@ -86,7 +88,7 @@
             }
         }, ".button-bid");
 
-        $('.close').on('click', function(){
+        $('.close').on('click', function () {
             $(this).parent().css('display', 'none');
         });
     </script>

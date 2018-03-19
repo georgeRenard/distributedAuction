@@ -30,7 +30,7 @@ if(!localStorage.getItem('auctioner')) localStorage.setItem('auctioner', '');
 
 if(localStorage.getItem('auctioner').length == 0){
 	AuctionerContract
-		.deployed({from: "0x7e116aaf6bcc45118dca2675cf59137dc212ee5e"})
+		.deployed({from: web3.eth.accounts[4]})
 		.then(function(deploy) {
 		DeployedAuctioner = deploy;
 		localStorage.setItem('auctioner', DeployedAuctioner.address);
@@ -51,6 +51,29 @@ Storage.prototype.getObj = function(key) {
 if(localStorage.getItem('auctions').length === 0){
 	localStorage.setObj('auctions', []);
 }
+
+
+function renderAll(){
+	
+	ReactDOM.render(
+		<AppContentOptional filter={"all"}/> ,
+			document.querySelector('#content')
+		)
+	}
+	
+	function renderInactive(){
+		ReactDOM.render(
+		<AppContentOptional filter={"inactive"}/> ,
+			document.querySelector('#content')
+		)
+	}
+	
+	function renderOnlyActive(){
+		ReactDOM.render(
+			<AppContentOptional filter={"active"}/> ,
+				document.querySelector('#content')
+			)
+	}
 
 
 class AuctionForm extends React.Component {
@@ -75,7 +98,6 @@ class AuctionForm extends React.Component {
 			this.auction.itemName &&
 			this.auction.span &&
 			this.auction.startPrice){
-
 
 			AuctionContract.new(
 				DeployedAuctioner.address,
@@ -221,9 +243,6 @@ class AuthorizeBidderForm extends React.Component {
 
 	handleAddressChange(event){
 		this.address = event.target.value;
-		if(this.address.length == 0){
-			this.address = web3.eth.accounts[0];
-		}	
 	}
 
 	authorizeBidder(event){
@@ -232,13 +251,12 @@ class AuthorizeBidderForm extends React.Component {
 		var self = this;
 
 		AuctionContract.at(address).then((contract) => {
-			contract.allowBidder.call(self.address, self.secret ,{from: self.address}).then(() => {
+			contract.allowBidder(self.address, self.secret ,{from: self.address}).then((x) => {
 			//show success notification
 				self.showSuccess('You were successfully authorized to place bids. Congratulations!');
-
-				}).catch((err) => {
+			}).catch((err) => {
 					self.showError("Something went wrong. Check if the auction was not terminated.");
-				});
+			});
 
 		}).catch(() => {
 			self.showError("The contract you tried to access is INVALID.");
@@ -303,7 +321,7 @@ class WithdrawBidsForm extends React.Component {
 
 		AuctionContract.at(address).then((contract) => {
 
-			contract.withdrawBid.call(self.secret ,{from: self.address}).then(() => {
+			contract.withdrawBid(self.secret ,{from: self.address}).then(() => {
 				//show success notification
 				self.showSuccess('You successfully withdrawed your bid. Congratulations!');
 
@@ -337,6 +355,7 @@ class WithdrawWinnerBid extends React.Component {
 		this.handleSecretChange = this.handleSecretChange.bind(this);
 		this.withdrawBid = this.withdrawBid.bind(this);
 		this.makeBid = this.makeBid.bind(this);
+		this.terminate = this.terminate.bind(this);
 	}
 
 	render(){
@@ -396,7 +415,7 @@ class WithdrawWinnerBid extends React.Component {
 		var self = this;
 		AuctionContract.at(address).then((contract) => 
 		{
-			contract.withdrawWinningBid.call(self.secret ,{from: web3.eth.accounts[0]}).then(() => {
+			contract.withdrawWinningBid(self.secret ,{from: web3.eth.accounts[0]}).then(() => {
 				//show success notification
 				self.showSuccess('You successfully withdrawed the winning bid. Congratulations!');
 
@@ -413,45 +432,21 @@ class WithdrawWinnerBid extends React.Component {
 		event.preventDefault();
 		var address = $('#detailsModal').attr('data-contract-addr');
 		var self = this;
+
 		AuctionContract.at(address).then((contract) => {
-
-			contract.terminate.call(self.secret ,{from: web3.eth.accounts[0]}).then(() => {
+			console.log(contract);
+			contract.terminate({from: web3.eth.accounts[0]}).then(() => {
 				//show success notification
-				self.showSuccess('You successfully withdrawed the winning bid. Congratulations!');
-
+				self.showSuccess('You successfully terminated the auction.');
 			}).catch((err) => {
-				self.showError("The auction is eihter still active or you are not authorized to do that.");
+				console.log(err)
+				self.showError("The auction is eihter already terminated or you are not authorized to do that.");
 			});
+
 		}).catch((err) => {
 			self.showError("The contract you tried to access is INVALID.");
 		});
 
-	}
-
-	makeBid(event){
-		event.preventDefault();
-		var address = $('#detailsModal').attr('data-contract-addr');
-		var self = this;
-		AuctionContract.at(address).then((contract) => {
-
-			contract.isAuthorizedBidder.call(web3.eth.accounts[0], {from: web3.eth.accounts[0]}).then((authorized) => {
-				//show success notification
-
-				if(!authorized){
-					self.showError("You are eihter not an authorized or the auction was/has already terminated/finished.");
-					return;
-				}
-
-				self.showSuccess('You are an authorized bidder, you can proceed in a moment');
-
-				ReactDOM.render(<DetailsView contractInstance={contract}/>, document.querySelector('#content'))
-
-			}).catch((err) => {
-				self.showError("You are eihter not an authorized or the auction was/has already terminated/finished.");
-			});
-		}).catch((err) => {
-			self.showError("The contract you tried to access is INVALID.");
-		});
 	}
 
 	showSuccess(msg){
@@ -462,6 +457,31 @@ class WithdrawWinnerBid extends React.Component {
 	showError(msg){
 		$('#error').css('display', 'block');
 		$('#error').find('span#alert-text').text(msg);
+	}
+
+	makeBid(event){
+		event.preventDefault();
+		var address = $('#detailsModal').attr('data-contract-addr');
+		var self = this;
+		AuctionContract.at(address).then((contract) => {
+			contract.isAuthorizedBidder.call(web3.eth.accounts[1], {from: web3.eth.accounts[1]}).then((authorized) => {
+				//show success notification
+				if(!authorized){
+					self.showError("You are eihter not an authorized or the auction was/has already terminated/finished.");
+					return;
+				}
+
+				self.showSuccess('You are an authorized bidder, you can proceed in a moment');
+
+				// That's is an awful way to perform... (i am a react newby and i have no idea how ReactComponent states work)
+				ReactDOM.render(<DetailsView contractInstance={contract}/>, document.querySelector('#content'))
+
+			}).catch((err) => {
+				self.showError("You are eihter not an authorized or the auction was/has already terminated/finished.");
+			});
+		}).catch((err) => {
+			self.showError("The contract you tried to access is INVALID.");
+		});
 	}
 }
 
@@ -514,8 +534,9 @@ class AuctionItem extends React.Component {
 			this.instance.getDescription.call(),
 			this.instance.getThumbnailURL.call(),
 			this.instance.getRemainingTime.call(),
-			this.instance.isInactive.call()
+			this.instance.isTerminated.call()
 		]).then((response) => {
+
 			let itemName = response[0];
 			let startPrice = response[1];
 			let description = response[2];
@@ -530,6 +551,7 @@ class AuctionItem extends React.Component {
 				totalSeconds: totalSeconds.toNumber(),
 				terminated: terminated
 			});
+
 			if(!terminated){
 				this.createCountdown();
 			}
@@ -682,7 +704,7 @@ class AuctionItem extends React.Component {
     render() {
 
 		const { itemName, startPrice, description, thumbnailURL, terminated } = this.state;
-		
+
 		const timer = !terminated ? (
 			<div className="status-bar">
   	<div className="countdown" id={this.instance.address}>
@@ -821,8 +843,11 @@ class DetailsView extends React.Component {
 			seconds: 0
 		}
 
-		this.instance = props.contractInstance;
+		this.amount = 0;
 
+		this.instance = props.contractInstance;
+		this.bid = this.bid.bind(this);
+		this.handleAmountChange = this.handleAmountChange.bind(this);
 	}
 
 	componentDidMount(){
@@ -843,13 +868,14 @@ class DetailsView extends React.Component {
 			let terminated = response[5];
 			let maximumBid = response[6];
 			this.setState({
-				itemName: itemName.length > 27 ? itemName.substring(0,25) + "..." : itemName,
+				itemName: itemName,
 				startPrice: parseFloat(web3.fromWei(startPrice.toNumber(), "ether" )).toFixed(3) + " ETH",
-				description: description.length > 27 ? description.substring(0,25) + "..." : description,
+				description: description,
 				thumbnailURL: thumbnailURL,
 				totalSeconds: totalSeconds.toNumber(),
 				terminated: terminated,
-				maximumBid: web3.fromWei(maximumBid.toNumber(), "ether") + " ETH"
+				maximumBid: maximumBid == 0 ? parseFloat(web3.fromWei(startPrice.toNumber(), "ether" )).toFixed(3) + " ETH"
+					 : (web3.fromWei(maximumBid.toNumber(), "ether")) + " ETH"
 			});
 
 			if(!terminated){
@@ -858,28 +884,279 @@ class DetailsView extends React.Component {
 		});
 	}
 
+
+	createCountdown(){
+			var totalSeconds = this.state.totalSeconds;
+			var totalSecs = this.state.totalSeconds;
+			var hours =  Math.floor(totalSecs / 3600);
+			totalSecs %= 3600;
+			var minutes = Math.floor(totalSecs / 60);
+			var seconds = totalSecs % 60;
+		
+			var id = '#details-counter';
+
+
+			var Countdown = {
+		  
+			// Backbone-like structure
+			$el: $(id),
+			
+			// Params
+			countdown_interval: null,
+			total_seconds     : totalSeconds,
+		
+			// Initialize the countdown  
+			init: function() {
+			  
+			  this.$ = {
+				  hours  : this.$el.find('.bloc-time.hours .figure'),
+				  minutes: this.$el.find('.bloc-time.min .figure'),
+				  seconds: this.$el.find('.bloc-time.sec .figure')
+			  };
+		  
+			  this.values = {
+				  hours: hours ,
+				  minutes: minutes,
+				  seconds: seconds,
+			  };
+		
+			  this.count();    
+			},
+			
+			count: function() {
+			  
+			  var that    = this,
+				  $hour_1 = this.$.hours.eq(0),
+				  $hour_2 = this.$.hours.eq(1),
+				  $min_1  = this.$.minutes.eq(0),
+				  $min_2  = this.$.minutes.eq(1),
+				  $sec_1  = this.$.seconds.eq(0),
+				  $sec_2  = this.$.seconds.eq(1);
+			  
+				  this.countdown_interval = setInterval(function() {
+		  
+				  if(that.total_seconds > 0) {
+		  
+					  --that.values.seconds;              
+		  
+					  if(that.values.minutes >= 0 && that.values.seconds < 0) {
+		  
+						  that.values.seconds = 59;
+						  --that.values.minutes;
+					  }
+		  
+					  if(that.values.hours >= 0 && that.values.minutes < 0) {
+		  
+						  that.values.minutes = 59;
+						  --that.values.hours;
+					  }
+		  
+					  // Update DOM values
+					  // Hours
+					  that.checkHour(that.values.hours, $hour_1, $hour_2);
+		  
+					  // Minutes
+					  that.checkHour(that.values.minutes, $min_1, $min_2);
+		  
+					  // Seconds
+					  that.checkHour(that.values.seconds, $sec_1, $sec_2);
+		  
+					  --that.total_seconds;
+				  }
+				  else {
+					  clearInterval(that.countdown_interval);
+				  }
+			  }, 1000);    
+			},
+			
+			animateFigure: function($el, value) {
+			  
+			   var that         = $(document),
+					   $top         = $el.find('.top'),
+				   $bottom      = $el.find('.bottom'),
+				   $back_top    = $el.find('.top-back'),
+				   $back_bottom = $el.find('.bottom-back');
+		  
+			  $back_top.find('span').html(value);
+		
+			  $back_bottom.find('span').html(value);
+		  
+			  // Then animate
+			  TweenMax.to($top, 0.8, {
+				  rotationX           : '-180deg',
+				  transformPerspective: 300,
+					ease                : Quart.easeOut,
+				  onComplete          : function() {
+		  
+					  $top.html(value);
+		  
+					  $bottom.html(value);
+		  
+					  TweenMax.set($top, { rotationX: 0 });
+				  }
+			  });
+		  
+			  TweenMax.to($back_top, 0.8, { 
+				  rotationX           : 0,
+				  transformPerspective: 300,
+					ease                : Quart.easeOut, 
+				  clearProps          : 'all' 
+			  });    
+			},
+			
+			checkHour: function(value, $el_1, $el_2) {
+			  
+			  var val_1       = value.toString().charAt(0),
+				  val_2       = value.toString().charAt(1),
+				  fig_1_value = $el_1.find('.top').html(),
+				  fig_2_value = $el_2.find('.top').html();
+		  
+			  if(value >= 10) {
+		  
+				  // Animate only if the figure has changed
+				  if(fig_1_value !== val_1) this.animateFigure($el_1, val_1);
+				  if(fig_2_value !== val_2) this.animateFigure($el_2, val_2);
+			  }
+			  else {
+		  
+				  // If we are under 10, replace first figure with 0
+				  if(fig_1_value !== '0') this.animateFigure($el_1, 0);
+				  if(fig_2_value !== val_1) this.animateFigure($el_2, val_1);
+			  }    
+			}
+		  };
+		Countdown.init();
+	}
+
+	bid(event){
+		event.preventDefault();
+		var self = this;
+		this.instance.bid({value: self.amount, from: web3.eth.accounts[1]}).then(() => {
+		
+			console.log("Success");
+			$('#bid').text(self.amount);
+
+		}).catch((err) => {
+			console.log("Something went wrong");
+		});
+
+	}
+
+	handleAmountChange(event){
+		this.amount = parseInt(event.target.value);
+	}
+
 	render() {
 
 		const { itemName, startPrice, description, thumbnailURL, terminated, maximumBid } = this.state;
 
+		var price = startPrice;
+
 		return (
-			<div className="container">
-				<div className="col-lg-6 col-md-6 col-sm-12 col-12">
-					<img src={thumbnailURL} width="640" height="640"/>
-				</div>
-				<div className="col-lg-6 col-md-6 col-sm-12 col-12">
-					<div>
-						<h2>{itemName}</h2>
-					</div>
-					<div>
-						<h5>{maximumBid}</h5>
-					</div>
-					<button className="btn btn-primary"/>Make Bid
-					<div>
-						<p>{description}</p>
-					</div>
-				</div>
-			</div>
+			<div className="container-fluid row">
+            <div className="col-lg-6 col-md-6 col-sm-12 col-12">
+				<img src={thumbnailURL}
+				 className="img-display"/>
+            </div>
+            <div className="col-lg-6 col-md-6 col-sm-12 col-12 vertical-offset">
+                <div className="details-section col-lg-8 col-md-8 col-sm-12 col-12">
+                    <h1>{itemName}</h1>
+                </div>
+                <div className="details-section">
+                    <div className="row">
+                        <h2 id="bid">{maximumBid}</h2>
+						<input className="form-control" type="number" onChange={this.handleAmountChange} placeholder="Amount"/> 
+                        <button onClick={this.bid} className="btn btn-primary">Make Bid</button>
+                    </div>
+                </div>
+                <div className="details-section">
+                    <div className="countdown" id="details-counter">
+                        <div className="bloc-time hours" data-init-value="0">
+                            <span className="count-title">Hours</span>
+
+                            <div className="figure hours hours-1">
+                                <span className="top">2</span>
+                                <span className="top-back">
+                                    <span>2</span>
+                                </span>
+                                <span className="bottom">2</span>
+                                <span className="bottom-back">
+                                    <span>2</span>
+                                </span>
+                            </div>
+
+                            <div className="figure hours hours-2">
+                                <span className="top">4</span>
+                                <span className="top-back">
+                                    <span>4</span>
+                                </span>
+                                <span className="bottom">4</span>
+                                <span className="bottom-back">
+                                    <span>4</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="bloc-time min" data-init-value="0">
+                            <span className="count-title">Minutes</span>
+
+                            <div className="figure min min-1">
+                                <span className="top">0</span>
+                                <span className="top-back">
+                                    <span>0</span>
+                                </span>
+                                <span className="bottom">0</span>
+                                <span className="bottom-back">
+                                    <span>0</span>
+                                </span>
+                            </div>
+
+                            <div className="figure min min-2">
+                                <span className="top">0</span>
+                                <span className="top-back">
+                                    <span>0</span>
+                                </span>
+                                <span className="bottom">0</span>
+                                <span className="bottom-back">
+                                    <span>0</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="bloc-time sec" data-init-value="0">
+                            <span className="count-title">Seconds</span>
+
+                            <div className="figure sec sec-1">
+                                <span className="top">0</span>
+                                <span className="top-back">
+                                    <span>0</span>
+                                </span>
+                                <span className="bottom">0</span>
+                                <span className="bottom-back">
+                                    <span>0</span>
+                                </span>
+                            </div>
+
+                            <div className="figure sec sec-2">
+                                <span className="top">0</span>
+                                <span className="top-back">
+                                    <span>0</span>
+                                </span>
+                                <span className="bottom">0</span>
+                                <span className="bottom-back">
+                                    <span>0</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="details-section col-lg-8 col-md-8 col-sm-12 col-12 description margin-top">
+                    <p>
+						{description}
+                    </p>
+                </div>
+            </div>
+        </div>
 		)
 
 	}
@@ -894,23 +1171,8 @@ class App extends React.Component {
 			auctions: localStorage.getObj('auctions')
 		}
 
-		this.renderAll = this.renderAll.bind(this);
-		this.renderOnlyActive = this.renderOnlyActive.bind(this);
-		this.renderInactive = this.renderInactive.bind(this);
     }
 
-
-	renderAll(){
-		
-	}
-
-	renderOnlyActive(){
-
-	}
-
-	renderInactive(){
-
-	}
 
 	withdrawComissions(){
 		DeployedAuctioner
@@ -939,17 +1201,17 @@ class App extends React.Component {
             <ul className="navbar-nav">
                 <li className="nav-item active">
                     <span>
-                        <a className="nav-link" href="#" onClick={this.renderAll}>All</a>
+                        <a className="nav-link" href="#" onClick={renderAll}>All</a>
                     </span>
                 </li>
                 <li className="nav-item">
                     <span>
-                        <a className="nav-link" href="#" onClick={this.renderOnlyActive}>Active</a>
+                        <a className="nav-link" href="#" onClick={renderOnlyActive}>Active</a>
                     </span>
                 </li>
                 <li className="nav-item">
                     <span>
-                        <a className="nav-link" href="#" onClick={this.renderInactive}>Inactive</a>
+                        <a className="nav-link" href="#" onClick={renderInactive}>Inactive</a>
                     </span>
                 </li>
 				<li className="nav-item">
@@ -1006,6 +1268,56 @@ class App extends React.Component {
     }
 
 }
+
+class AppContentOptional extends React.Component {
+	constructor(props){
+
+		super(props);
+
+		this.auctions = [];
+	}
+
+	componentDidMount(){
+		let auctions = localStorage.getObj('auctions').map(x => AuctionContract.at(x));
+		let filtered = [];
+		var self = this;
+		Promise
+			.all(auctions.map(y => y.isInactive.call({from: web3.eth.accounts[0]})))
+			.then(result => {
+				switch(self.props.filter){
+					case "active":
+					for(let i = 0 ; i < result.length; i++){
+						if(!result[i]) filtered.push(auctions[i]);
+					}
+					break;
+					case "inactive":
+					for(let i = 0 ; i < result.length; i++){
+						if(result[i]) filtered.push(auctions[i]);
+					}
+					break;
+					default:
+						filtered = auctions;
+						break;
+				}
+				self.auctions = filtered;
+		});
+		
+	}
+
+	render(){
+
+		return (
+			<div className="row">
+				{this.auctions.map(x => 
+					<div className="col-6 col-sm-6 col-md-4 col-lg-3">
+						<AuctionItem contractInstance={x} />
+					</div>
+				)}
+            </div>
+		)
+	}
+}
+
 ReactDOM.render( 
 	<App  /> ,
     document.querySelector('#root')
